@@ -4,7 +4,7 @@ import (
 	"log"
 	"net"
 
-	pb "singularity"
+	pb "examples/greeter"
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -30,4 +30,3 @@ func main() {
 	log.Printf("Starting new grpc server on port%s", port)
 	s.Serve(lis)
 }
-

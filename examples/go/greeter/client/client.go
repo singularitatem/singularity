@@ -7,11 +7,11 @@ import (
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 
-	pb "singularity"
+	pb "examples/greeter"
 )
 
 const (
-	address	=	"localhost:50051"
+	address = "ec2-3-81-102-226.compute-1.amazonaws.com:50051"
 )
 
 func main() {
@@ -32,4 +32,3 @@ func main() {
 	}
 	log.Printf("Received greeting: %s", r.Greeting)
 }
-
