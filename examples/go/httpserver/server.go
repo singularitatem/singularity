@@ -1,16 +1,22 @@
 package main
 
 import (
-	"fmt"
+	"base/app"
+	"io/ioutil"
 	"log"
 	"net/http"
 )
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Welcom to Yi's website %s!", r.URL.Path[1:])
+	html, err := ioutil.ReadFile(app.DataDir() + "/examples/go/httpserver/res/index.html")
+	if err != nil {
+		log.Fatal("Error reading index.html: ", err)
+	}
+	w.Write(html)
 }
 
 func main() {
+	app.Init()
 	http.HandleFunc("/", homeHandler)
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
