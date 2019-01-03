@@ -2,9 +2,14 @@ package main
 
 import (
 	"base/app"
+	"flag"
 	"io/ioutil"
 	"log"
 	"net/http"
+)
+
+var (
+	port = flag.String("port", "8080", "Http port number")
 )
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
@@ -18,5 +23,6 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 func main() {
 	app.Init()
 	http.HandleFunc("/", homeHandler)
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Printf("Starting http://localhost:%s", *port)
+	log.Fatal(http.ListenAndServe(":" + *port, nil))
 }

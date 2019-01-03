@@ -1,6 +1,7 @@
 package app
 
 import (
+	"flag"
 	"log"
 	"os"
 	"path/filepath"
@@ -11,6 +12,7 @@ var (
 	dataDir    string
 )
 
+// Init handles several initialization steps of common go applications
 func Init() {
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {
@@ -18,6 +20,8 @@ func Init() {
 	}
 	workingDir = dir
 	dataDir = filepath.Join(os.Args[0]+".runfiles", "__main__")
+
+	flag.Parse()
 }
 
 func WorkingDir() string {
