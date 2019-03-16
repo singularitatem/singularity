@@ -1,8 +1,8 @@
 package main
 
 import (
+    "flag"
 	"log"
-	"os"
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -10,23 +10,23 @@ import (
 	pb "examples/greeter"
 )
 
-const (
-	address = "ec2-3-81-102-226.compute-1.amazonaws.com:50051"
+var (
+	address = flag.String("address", "localhost", "Greeter server dns address")
+    port = flag.String("port", "50051", "Greeter server port number")
+    name = flag.String("name", "Yi Jin", "Enter your name")
 )
 
 func main() {
-	conn, err := grpc.Dial(address, grpc.WithInsecure())
+    flag.Parse()
+
+	conn, err := grpc.Dial(*address + ":" + *port, grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
 	}
 	defer conn.Close()
 	c := pb.NewGreeterClient(conn)
 
-	name := "Yi Jin"
-	if len(os.Args) > 1 {
-		name = os.Args[1]
-	}
-	r, err := c.SayHello(context.Background(), &pb.HelloRequest{Name: name})
+	r, err := c.SayHello(context.Background(), &pb.HelloRequest{Name: *name})
 	if err != nil {
 		log.Fatalf("could not greet: %v", err)
 	}

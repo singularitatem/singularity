@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+import "google/protobuf/any.proto";
+
+package models.proto.neuron;
+
+enum NeuronType {
+	NO_OP = 0;
+	SENSORY = 1;
+	INTERNEURON = 2;
+	MOTOR = 3;
+}
+
+message Neuron {
+	uint64 id = 1;
+	NeuronType type = 2;
+	repeated uint64 neighbors = 3;
+}
+
+message Impulse {
+	bytes message = 1;
+}

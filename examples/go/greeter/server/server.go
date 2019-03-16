@@ -1,6 +1,7 @@
 package main
 
 import (
+    "flag"
 	"log"
 	"net"
 
@@ -10,8 +11,8 @@ import (
 	"google.golang.org/grpc"
 )
 
-const (
-	port = ":50051"
+var (
+	port = flag.String("port", "50051", "server port number")
 )
 
 type Server struct{}
@@ -21,12 +22,14 @@ func (s *Server) SayHello(ctx context.Context, in *pb.HelloRequest) (*pb.HelloRe
 }
 
 func main() {
-	lis, err := net.Listen("tcp", port)
+    flag.Parse()
+
+	lis, err := net.Listen("tcp", ":" + *port)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
 	s := grpc.NewServer()
 	pb.RegisterGreeterServer(s, &Server{})
-	log.Printf("Starting new grpc server on port%s", port)
+	log.Printf("Starting new grpc server on port %s", *port)
 	s.Serve(lis)
 }
