@@ -1,0 +1,34 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Create an write Lambda function with a restful API
+Parameters:
+  
+
+Resources:
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      
+      Path: /
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          -
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        -
+          PolicyName: AWSLambdaBasicExecutionRole
+		  PolicyDocument:
+		    Version: 2012-10-17
+			Statement:
+			  Effect: Allow
+			  Action:
+			    - "logs:CreateLogGroup"
+				- "logs:CreateLogStream"
+				- "logs:PutLogEvents"
+			  Resource: "*"
+
+		  
+  
