@@ -1,7 +1,13 @@
 # Singularity
 <p align="left">
+    <a href="https://circleci.com/gh/singularitatem/singularity">
+        <img alt="Build" src="https://img.shields.io/circleci/build/github/singularitatem/singularity/master">
+    </a>
     <a href="https://github.com/singularitatem/singularity/blob/master/LICENSE">
         <img alt="GitHub" src="https://img.shields.io/github/license/singularitatem/singularity.svg?color=blue">
+    </a>
+    <a href="https://github.com/singularitatem/singluarity/releases">
+        <img alt="GitHub" src="https://img.shields.io/github/release/singularitatem/singularity.svg">
     </a>
 </p>
 
