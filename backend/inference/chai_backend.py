@@ -16,6 +16,8 @@ class ChaiBackend(InferenceBackend):
     def _to_chat_history(self, request: ChatRequest) -> list[dict]:
         user_name = request.user_name or self._default_user_name
         result = []
+        if request.system_prompt:
+            result.append({"sender": "Bot", "message": request.system_prompt})
         for m in request.messages:
             sender = user_name if m.role == "user" else "Bot"
             result.append({"sender": sender, "message": m.content})

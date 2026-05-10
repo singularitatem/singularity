@@ -4,14 +4,8 @@ import type { Character, Conversation, Message, StreamChunk } from "../types";
 const DEFAULT_MODEL = "default";
 const STORAGE_KEY = "singularity.conversations";
 const CHARACTER_KEY = "singularity.characterId";
+const RECENT_KEY = "singularity.recentCharacterIds";
 const DEFAULT_CHARACTER_ID = "einstein";
-
-const FALLBACK_CHARACTERS: Character[] = [
-  { id: "einstein", name: "Einstein", bot_name: "Einstein", description: "Nobel Prize physicist. Curious, playful, and rigorously honest.", emoji: "🧑‍🔬" },
-  { id: "socrates", name: "Socrates", bot_name: "Socrates", description: "Ancient philosopher. Guides through questions rather than answers.", emoji: "🏛️" },
-  { id: "ada", name: "Ada Lovelace", bot_name: "Ada", description: "Pioneer of computing. Thinks in patterns, algorithms, and poetry.", emoji: "💻" },
-  { id: "tesla", name: "Tesla", bot_name: "Tesla", description: "Visionary inventor. Dreams in electricity and resonant frequencies.", emoji: "⚡" },
-];
 
 function createId() {
   return typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -24,16 +18,16 @@ function nowIso() {
 }
 
 function createConversation(characterId: string): Conversation {
-  const timestamp = nowIso();
-  return { id: createId(), title: "New conversation", characterId, createdAt: timestamp, updatedAt: timestamp, messages: [] };
+  const ts = nowIso();
+  return { id: createId(), title: "New conversation", characterId, createdAt: ts, updatedAt: ts, messages: [] };
 }
 
 function loadConversations(defaultCharacterId: string): Conversation[] {
   if (typeof window === "undefined") return [createConversation(defaultCharacterId)];
   try {
-    const stored = window.localStorage.getItem(STORAGE_KEY);
-    if (!stored) return [createConversation(defaultCharacterId)];
-    const parsed = JSON.parse(stored) as Conversation[];
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (!raw) return [createConversation(defaultCharacterId)];
+    const parsed = JSON.parse(raw) as Conversation[];
     const valid = parsed.map((c) => ({ ...c, characterId: c.characterId ?? defaultCharacterId }));
     return valid.length > 0 ? valid : [createConversation(defaultCharacterId)];
   } catch {
@@ -44,6 +38,16 @@ function loadConversations(defaultCharacterId: string): Conversation[] {
 function loadActiveCharacterId(): string {
   try { return window.localStorage.getItem(CHARACTER_KEY) ?? DEFAULT_CHARACTER_ID; }
   catch { return DEFAULT_CHARACTER_ID; }
+}
+
+function loadRecentCharacterIds(activeId: string): string[] {
+  try {
+    const raw = window.localStorage.getItem(RECENT_KEY);
+    const parsed: string[] = raw ? JSON.parse(raw) : [];
+    return [activeId, ...parsed.filter((id) => id !== activeId)].slice(0, 2);
+  } catch {
+    return [activeId];
+  }
 }
 
 function buildWebSocketUrl() {
@@ -66,9 +70,15 @@ function sortConversations(convs: Conversation[]) {
   return [...convs].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
 }
 
-export function useChatModel() {
-  const [characters, setCharacters] = useState<Character[]>(FALLBACK_CHARACTERS);
+interface Props {
+  characters: Character[];
+}
+
+export function useChatModel({ characters }: Props) {
   const [activeCharacterId, setActiveCharacterId] = useState<string>(loadActiveCharacterId);
+  const [recentCharacterIds, setRecentCharacterIds] = useState<string[]>(() =>
+    loadRecentCharacterIds(loadActiveCharacterId()),
+  );
   const [conversations, setConversations] = useState<Conversation[]>(() =>
     loadConversations(loadActiveCharacterId()),
   );
@@ -80,15 +90,6 @@ export function useChatModel() {
   const [streamError, setStreamError] = useState<string | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
 
-  // Fetch characters from backend, fall back to hardcoded list
-  useEffect(() => {
-    fetch("/api/v1/characters")
-      .then((r) => r.ok ? r.json() : null)
-      .then((data) => { if (Array.isArray(data) && data.length > 0) setCharacters(data); })
-      .catch(() => {});
-  }, []);
-
-  // Persist conversations and active character
   useEffect(() => {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(conversations));
   }, [conversations]);
@@ -97,7 +98,10 @@ export function useChatModel() {
     window.localStorage.setItem(CHARACTER_KEY, activeCharacterId);
   }, [activeCharacterId]);
 
-  // Keep activeConversationId valid
+  useEffect(() => {
+    window.localStorage.setItem(RECENT_KEY, JSON.stringify(recentCharacterIds));
+  }, [recentCharacterIds]);
+
   useEffect(() => {
     if (!conversations.some((c) => c.id === activeConversationId)) {
       setActiveConversationId(conversations[0]?.id);
@@ -115,6 +119,9 @@ export function useChatModel() {
 
   const selectCharacter = (characterId: string) => {
     setActiveCharacterId(characterId);
+    setRecentCharacterIds((prev) =>
+      [characterId, ...prev.filter((id) => id !== characterId)].slice(0, 2),
+    );
   };
 
   const createNewConversation = () => {
@@ -126,16 +133,13 @@ export function useChatModel() {
     setStreamError(null);
   };
 
-  const selectConversation = (conversationId: string) => {
-    setActiveConversationId(conversationId);
-    setStreamError(null);
-  };
+  const selectConversation = (id: string) => { setActiveConversationId(id); setStreamError(null); };
 
-  const deleteConversation = (conversationId: string) => {
+  const deleteConversation = (id: string) => {
     if (streaming || conversations.length === 1) return;
-    const remaining = conversations.filter((c) => c.id !== conversationId);
+    const remaining = conversations.filter((c) => c.id !== id);
     setConversations(remaining);
-    if (conversationId === activeConversationId) setActiveConversationId(remaining[0].id);
+    if (id === activeConversationId) setActiveConversationId(remaining[0].id);
   };
 
   const insertEmoji = (emoji: string) => setInput((prev) => `${prev}${emoji}`);
@@ -145,9 +149,9 @@ export function useChatModel() {
     if (!trimmed || streaming || !activeConversation) return;
 
     const sentAt = nowIso();
-    const userMessage: Message = { id: createId(), role: "user", content: trimmed, createdAt: sentAt };
-    const assistantMessage: Message = { id: createId(), role: "assistant", content: "", createdAt: sentAt };
-    const nextMessages = [...activeConversation.messages, userMessage, assistantMessage];
+    const userMsg: Message = { id: createId(), role: "user", content: trimmed, createdAt: sentAt };
+    const assistantMsg: Message = { id: createId(), role: "assistant", content: "", createdAt: sentAt };
+    const nextMessages = [...activeConversation.messages, userMsg, assistantMsg];
 
     setConversations((prev) =>
       sortConversations(
@@ -171,11 +175,18 @@ export function useChatModel() {
         messages: nextMessages.map(({ role, content }) => ({ role, content })),
         model: DEFAULT_MODEL,
         bot_name: activeCharacter?.bot_name,
+        system_prompt: activeCharacter?.systemPrompt ?? null,
       }));
     };
 
     ws.onmessage = (event) => {
       const chunk: StreamChunk = JSON.parse(event.data);
+      if (chunk.error) {
+        setStreamError(chunk.error);
+        ws.close();
+        setStreaming(false);
+        return;
+      }
       if (chunk.done) { ws.close(); setStreaming(false); return; }
       setConversations((prev) =>
         sortConversations(
@@ -189,11 +200,7 @@ export function useChatModel() {
       );
     };
 
-    ws.onerror = () => {
-      setStreamError("Connection problem. Check that the Python backend is running.");
-      setStreaming(false);
-    };
-
+    ws.onerror = () => { setStreamError("Connection problem. Check that the Python backend is running."); setStreaming(false); };
     ws.onclose = () => { wsRef.current = null; setStreaming(false); };
   };
 
@@ -202,12 +209,12 @@ export function useChatModel() {
     activeCharacterId,
     activeConversation,
     activeConversationId,
-    characters,
     conversations,
     createNewConversation,
     deleteConversation,
     input,
     insertEmoji,
+    recentCharacterIds,
     selectCharacter,
     selectConversation,
     sendMessage,

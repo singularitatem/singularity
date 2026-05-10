@@ -1,28 +1,38 @@
+import { useState } from "react";
+import { useCharacterStore } from "./model/useCharacterStore";
 import { useChatModel } from "./model/useChatModel";
+import { CharacterModal } from "./view/CharacterModal";
 import { ChatWindow } from "./view/ChatWindow";
 import { InputBar } from "./view/InputBar";
 import { Sidebar } from "./view/Sidebar";
 import styles from "./App.module.css";
 
 export default function App() {
+  const { characters, addCharacter, updateCharacter, deleteCharacter } = useCharacterStore();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   const {
     activeCharacter,
     activeCharacterId,
     activeConversation,
     activeConversationId,
-    characters,
     conversations,
     createNewConversation,
     deleteConversation,
     input,
     insertEmoji,
+    recentCharacterIds,
     selectCharacter,
     selectConversation,
     setInput,
     streamError,
     streaming,
     sendMessage,
-  } = useChatModel();
+  } = useChatModel({ characters });
+
+  const recentCharacters = recentCharacterIds
+    .map((id) => characters.find((c) => c.id === id))
+    .filter((c): c is typeof characters[0] => c !== undefined);
 
   return (
     <div className={styles.page}>
@@ -31,10 +41,12 @@ export default function App() {
         <Sidebar
           activeCharacterId={activeCharacterId}
           activeConversationId={activeConversationId}
-          characters={characters}
+          allCharacters={characters}
+          recentCharacters={recentCharacters}
           conversations={conversations}
           onCreateConversation={createNewConversation}
           onDeleteConversation={deleteConversation}
+          onManageCharacters={() => setIsModalOpen(true)}
           onSelectCharacter={selectCharacter}
           onSelectConversation={selectConversation}
           streaming={streaming}
@@ -47,9 +59,14 @@ export default function App() {
               <h1 className={styles.title}>Singularity</h1>
             </div>
             <div className={styles.headerMeta}>
-              <span className={styles.modelBadge}>
+              <button
+                className={styles.modelBadge}
+                onClick={() => setIsModalOpen(true)}
+                type="button"
+                title="Switch character"
+              >
                 {activeCharacter ? `${activeCharacter.emoji} ${activeCharacter.name}` : "No character"}
-              </span>
+              </button>
               <span className={styles.status}>
                 {streaming ? "Streaming response…" : "Ready to chat"}
               </span>
@@ -85,6 +102,18 @@ export default function App() {
           </section>
         </main>
       </div>
+
+      {isModalOpen && (
+        <CharacterModal
+          activeCharacterId={activeCharacterId}
+          characters={characters}
+          onAdd={addCharacter}
+          onClose={() => setIsModalOpen(false)}
+          onDelete={deleteCharacter}
+          onSelect={(id) => { selectCharacter(id); }}
+          onUpdate={updateCharacter}
+        />
+      )}
     </div>
   );
 }

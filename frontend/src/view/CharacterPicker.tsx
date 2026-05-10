@@ -5,13 +5,19 @@ interface Props {
   characters: Character[];
   activeCharacterId: string;
   onSelect: (characterId: string) => void;
+  onManage: () => void;
   disabled: boolean;
 }
 
-export function CharacterPicker({ characters, activeCharacterId, onSelect, disabled }: Props) {
+export function CharacterPicker({ characters, activeCharacterId, onSelect, onManage, disabled }: Props) {
   return (
     <div className={styles.section}>
-      <p className={styles.label}>Character</p>
+      <div className={styles.header}>
+        <p className={styles.label}>Character</p>
+        <button className={styles.manageButton} onClick={onManage} type="button">
+          Manage →
+        </button>
+      </div>
       <div className={styles.grid}>
         {characters.map((character) => {
           const isActive = character.id === activeCharacterId;

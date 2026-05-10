@@ -1,3 +1,4 @@
+import httpx
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
 from backend.api.schemas.chat import CharacterDTO, ChatRequestDTO, ChatResponseDTO
 from backend.api.deps import get_chat_service
@@ -30,8 +31,17 @@ async def chat_stream(ws: WebSocket) -> None:
         while True:
             data = await ws.receive_json()
             req = ChatRequestDTO(**data)
-            async for chunk in service.stream_chat(req.to_domain()):
-                await ws.send_json({"delta": chunk, "done": False})
-            await ws.send_json({"delta": "", "done": True})
+            try:
+                async for chunk in service.stream_chat(req.to_domain()):
+                    await ws.send_json({"delta": chunk, "done": False})
+                await ws.send_json({"delta": "", "done": True})
+            except httpx.ReadTimeout:
+                await ws.send_json({"error": "Request timed out — please try again.", "done": True})
+            except httpx.HTTPStatusError as exc:
+                status = exc.response.status_code
+                msg = "Rate limited — please wait a moment and try again." if status == 429 else f"API error {status} — please try again."
+                await ws.send_json({"error": msg, "done": True})
+            except Exception:
+                await ws.send_json({"error": "Unexpected error — please try again.", "done": True})
     except WebSocketDisconnect:
         pass

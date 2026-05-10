@@ -5,10 +5,12 @@ import styles from "./Sidebar.module.css";
 interface Props {
   activeCharacterId: string;
   activeConversationId: string;
-  characters: Character[];
+  allCharacters: Character[];
+  recentCharacters: Character[];
   conversations: Conversation[];
   onCreateConversation: () => void;
   onDeleteConversation: (conversationId: string) => void;
+  onManageCharacters: () => void;
   onSelectCharacter: (characterId: string) => void;
   onSelectConversation: (conversationId: string) => void;
   streaming: boolean;
@@ -26,15 +28,17 @@ function formatTimestamp(timestamp: string) {
 export function Sidebar({
   activeCharacterId,
   activeConversationId,
-  characters,
+  allCharacters,
+  recentCharacters,
   conversations,
   onCreateConversation,
   onDeleteConversation,
+  onManageCharacters,
   onSelectCharacter,
   onSelectConversation,
   streaming,
 }: Props) {
-  const characterMap = Object.fromEntries(characters.map((c) => [c.id, c]));
+  const characterMap = Object.fromEntries(allCharacters.map((c) => [c.id, c]));
 
   return (
     <aside className={styles.sidebar}>
@@ -45,8 +49,9 @@ export function Sidebar({
 
       <CharacterPicker
         activeCharacterId={activeCharacterId}
-        characters={characters}
+        characters={recentCharacters}
         disabled={streaming}
+        onManage={onManageCharacters}
         onSelect={onSelectCharacter}
       />
 

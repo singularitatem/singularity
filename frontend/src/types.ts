@@ -13,6 +13,8 @@ export interface Character {
   bot_name: string;
   description: string;
   emoji: string;
+  systemPrompt?: string;
+  isCustom?: boolean;
 }
 
 export interface Conversation {
@@ -40,4 +42,5 @@ export interface ChatResponse {
 export interface StreamChunk {
   delta: string;
   done: boolean;
+  error?: string;
 }

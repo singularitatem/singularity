@@ -13,6 +13,7 @@ class ChatRequestDTO(BaseModel):
     model: str = "default"
     bot_name: Optional[str] = None
     user_name: Optional[str] = None
+    system_prompt: Optional[str] = None
 
     def to_domain(self) -> ChatRequest:
         return ChatRequest(
@@ -20,6 +21,7 @@ class ChatRequestDTO(BaseModel):
             model=self.model,
             bot_name=self.bot_name,
             user_name=self.user_name,
+            system_prompt=self.system_prompt,
         )
 
 
@@ -35,3 +37,4 @@ class CharacterDTO(BaseModel):
     bot_name: str
     description: str
     emoji: str
+    system_prompt: Optional[str] = None

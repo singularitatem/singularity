@@ -1,3 +1,4 @@
+from typing import Optional
 from pydantic import BaseModel, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -8,6 +9,7 @@ class Character(BaseModel):
     bot_name: str  # sent to the inference API
     description: str
     emoji: str = "🤖"
+    system_prompt: Optional[str] = None
 
 
 class Settings(BaseSettings):

@@ -1,3 +1,5 @@
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import type { Character, Message } from "../types";
 import styles from "./MessageBubble.module.css";
 
@@ -36,8 +38,14 @@ export function MessageBubble({ character, message, streaming }: Props) {
               {character?.name ?? "Assistant"} is thinking
               <span className={styles.cursor} />
             </span>
-          ) : (
+          ) : isUser ? (
             message.content
+          ) : (
+            <div className={styles.markdown}>
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {message.content}
+              </ReactMarkdown>
+            </div>
           )}
         </div>
       </div>
