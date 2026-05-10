@@ -1,5 +1,5 @@
-from typing import AsyncIterator, Optional
-from backend.core.settings import Settings
+from typing import AsyncIterator
+from backend.core.settings import Settings, Character
 from backend.inference.interface import InferenceBackend, ChatRequest
 
 
@@ -7,6 +7,9 @@ class ChatService:
     def __init__(self, backend: InferenceBackend, settings: Settings) -> None:
         self._backend = backend
         self._settings = settings
+
+    def characters(self) -> list[Character]:
+        return self._settings.characters
 
     async def chat(self, request: ChatRequest) -> str:
         request.model = request.model or self._settings.default_model

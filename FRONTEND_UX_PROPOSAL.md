@@ -456,6 +456,35 @@ Fancy should not mean fragile.
 5. Replace the single-line input with a multiline composer and emoji button.
 6. Add streaming polish and message metadata.
 
+## Character & Provider Selection (Implemented)
+
+The UI now treats **character** (who you're talking to) as a first-class concept, separate from **provider** (which inference service is used).
+
+### Character Model
+
+Each character has:
+- `id` — stable key stored with the conversation
+- `name` — display name (shown in bubbles, header, empty state)
+- `bot_name` — the name sent to the inference API (may differ from display name)
+- `description` — one-line persona description
+- `emoji` — avatar shown in message bubbles and conversation list
+
+Characters are fetched from `GET /api/v1/characters` on load, with hardcoded fallback so the UI works even when the backend is down. Defined in `backend/core/settings.py` — add entries there to expand the roster.
+
+### Character Picker
+
+A 2-column card grid lives at the top of the sidebar. Selecting a character sets the **default character for the next new conversation**. Each `Conversation` stores its own `characterId` so you can have simultaneous conversations with different characters.
+
+### Per-Conversation Character
+
+`Conversation.characterId` is set when the conversation is created. Switching characters in the picker does not change active conversations — it only affects new ones. The conversation list shows each conversation's character emoji next to the title.
+
+### Provider Selection
+
+Provider (chai / echo) remains server-side config via `Settings.provider` in `.env`. Character selection is user-facing; provider selection is operator-facing. This separation keeps the UI clean and avoids exposing infrastructure choices.
+
+---
+
 ## Summary
 
 The current frontend is a solid scaffold, but the product experience is still plain. The biggest opportunity is not only prettier CSS, but a better interaction model: history, a stronger app shell, a richer composer, and a more memorable visual identity. If we do those together, the UI will feel less like a demo and more like a real chat product.

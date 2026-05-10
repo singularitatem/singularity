@@ -15,11 +15,11 @@ def create_app(settings: Optional[Settings] = None) -> FastAPI:
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
-        app.state.chat_service = ChatService(
-            backend=build_inference_backend(settings),
-            settings=settings,
-        )
+        backend = build_inference_backend(settings)
+        app.state.chat_service = ChatService(backend=backend, settings=settings)
         yield
+        if hasattr(backend, "aclose"):
+            await backend.aclose()
 
     app = FastAPI(
         title="Singularity Chat API",

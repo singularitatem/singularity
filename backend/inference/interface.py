@@ -13,6 +13,8 @@ class ChatMessage:
 class ChatRequest:
     messages: list
     model: str
+    bot_name: Optional[str] = None
+    user_name: Optional[str] = None
     temperature: Optional[float] = None
     max_tokens: Optional[int] = None
     conversation_id: Optional[str] = None

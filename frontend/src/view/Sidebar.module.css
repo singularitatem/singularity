@@ -29,6 +29,12 @@
   line-height: 1.1;
 }
 
+.divider {
+  height: 1px;
+  background: var(--border-subtle);
+  margin: 0 4px;
+}
+
 .createButton {
   width: 100%;
   min-height: 48px;
@@ -36,6 +42,11 @@
   border-radius: 16px;
   background: linear-gradient(135deg, rgba(255, 139, 93, 0.22), rgba(136, 236, 255, 0.12));
   font-weight: 600;
+}
+
+.itemEmoji {
+  margin-right: 5px;
+  font-size: 0.9rem;
 }
 
 .list {

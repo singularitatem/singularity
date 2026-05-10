@@ -6,13 +6,17 @@ import styles from "./App.module.css";
 
 export default function App() {
   const {
+    activeCharacter,
+    activeCharacterId,
     activeConversation,
     activeConversationId,
+    characters,
     conversations,
     createNewConversation,
     deleteConversation,
     input,
     insertEmoji,
+    selectCharacter,
     selectConversation,
     setInput,
     streamError,
@@ -25,10 +29,13 @@ export default function App() {
       <div className={styles.aurora} />
       <div className={styles.shell}>
         <Sidebar
+          activeCharacterId={activeCharacterId}
           activeConversationId={activeConversationId}
+          characters={characters}
           conversations={conversations}
           onCreateConversation={createNewConversation}
           onDeleteConversation={deleteConversation}
+          onSelectCharacter={selectCharacter}
           onSelectConversation={selectConversation}
           streaming={streaming}
         />
@@ -40,9 +47,11 @@ export default function App() {
               <h1 className={styles.title}>Singularity</h1>
             </div>
             <div className={styles.headerMeta}>
-              <span className={styles.modelBadge}>Echo backend</span>
+              <span className={styles.modelBadge}>
+                {activeCharacter ? `${activeCharacter.emoji} ${activeCharacter.name}` : "No character"}
+              </span>
               <span className={styles.status}>
-                {streaming ? "Streaming response" : "Ready to chat"}
+                {streaming ? "Streaming response…" : "Ready to chat"}
               </span>
             </div>
           </header>
@@ -50,16 +59,20 @@ export default function App() {
           <section className={styles.chatCard}>
             <div className={styles.chatHeader}>
               <div>
-                <h2 className={styles.chatTitle}>{activeConversation.title}</h2>
+                <h2 className={styles.chatTitle}>{activeConversation?.title}</h2>
                 <p className={styles.chatSubtitle}>
-                  {activeConversation.messages.length === 0
+                  {activeConversation?.messages.length === 0
                     ? "Start a fresh conversation or pick one from the library."
-                    : `${activeConversation.messages.length} messages in this thread`}
+                    : `${activeConversation?.messages.length} messages in this thread`}
                 </p>
               </div>
             </div>
 
-            <ChatWindow messages={activeConversation.messages} streaming={streaming} />
+            <ChatWindow
+              character={activeCharacter}
+              messages={activeConversation?.messages ?? []}
+              streaming={streaming}
+            />
 
             <InputBar
               disabled={streaming}

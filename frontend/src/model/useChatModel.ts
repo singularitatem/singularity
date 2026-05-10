@@ -1,8 +1,17 @@
 import { useEffect, useRef, useState } from "react";
-import type { Conversation, Message, StreamChunk } from "../types";
+import type { Character, Conversation, Message, StreamChunk } from "../types";
 
 const DEFAULT_MODEL = "default";
 const STORAGE_KEY = "singularity.conversations";
+const CHARACTER_KEY = "singularity.characterId";
+const DEFAULT_CHARACTER_ID = "einstein";
+
+const FALLBACK_CHARACTERS: Character[] = [
+  { id: "einstein", name: "Einstein", bot_name: "Einstein", description: "Nobel Prize physicist. Curious, playful, and rigorously honest.", emoji: "🧑‍🔬" },
+  { id: "socrates", name: "Socrates", bot_name: "Socrates", description: "Ancient philosopher. Guides through questions rather than answers.", emoji: "🏛️" },
+  { id: "ada", name: "Ada Lovelace", bot_name: "Ada", description: "Pioneer of computing. Thinks in patterns, algorithms, and poetry.", emoji: "💻" },
+  { id: "tesla", name: "Tesla", bot_name: "Tesla", description: "Visionary inventor. Dreams in electricity and resonant frequencies.", emoji: "⚡" },
+];
 
 function createId() {
   return typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -14,33 +23,27 @@ function nowIso() {
   return new Date().toISOString();
 }
 
-function createConversation(): Conversation {
+function createConversation(characterId: string): Conversation {
   const timestamp = nowIso();
-  return {
-    id: createId(),
-    title: "New conversation",
-    createdAt: timestamp,
-    updatedAt: timestamp,
-    messages: [],
-  };
+  return { id: createId(), title: "New conversation", characterId, createdAt: timestamp, updatedAt: timestamp, messages: [] };
 }
 
-function loadConversations() {
-  if (typeof window === "undefined") {
-    return [createConversation()];
-  }
-
+function loadConversations(defaultCharacterId: string): Conversation[] {
+  if (typeof window === "undefined") return [createConversation(defaultCharacterId)];
   try {
     const stored = window.localStorage.getItem(STORAGE_KEY);
-    if (!stored) {
-      return [createConversation()];
-    }
-
+    if (!stored) return [createConversation(defaultCharacterId)];
     const parsed = JSON.parse(stored) as Conversation[];
-    return parsed.length > 0 ? parsed : [createConversation()];
+    const valid = parsed.map((c) => ({ ...c, characterId: c.characterId ?? defaultCharacterId }));
+    return valid.length > 0 ? valid : [createConversation(defaultCharacterId)];
   } catch {
-    return [createConversation()];
+    return [createConversation(defaultCharacterId)];
   }
+}
+
+function loadActiveCharacterId(): string {
+  try { return window.localStorage.getItem(CHARACTER_KEY) ?? DEFAULT_CHARACTER_ID; }
+  catch { return DEFAULT_CHARACTER_ID; }
 }
 
 function buildWebSocketUrl() {
@@ -49,71 +52,76 @@ function buildWebSocketUrl() {
 }
 
 function titleFromMessages(messages: Message[]) {
-  const firstUserMessage = messages.find((message) => message.role === "user");
-  if (!firstUserMessage) {
-    return "New conversation";
-  }
-
-  const compact = firstUserMessage.content.replace(/\s+/g, " ").trim();
-  if (!compact) {
-    return "New conversation";
-  }
-
-  return compact.length > 32 ? `${compact.slice(0, 32)}...` : compact;
+  const first = messages.find((m) => m.role === "user");
+  if (!first?.content.trim()) return "New conversation";
+  const compact = first.content.replace(/\s+/g, " ").trim();
+  return compact.length > 32 ? `${compact.slice(0, 32)}…` : compact;
 }
 
-function updateConversationRecord(
-  conversations: Conversation[],
-  conversationId: string,
-  updater: (conversation: Conversation) => Conversation,
-) {
-  return conversations.map((conversation) =>
-    conversation.id === conversationId ? updater(conversation) : conversation,
-  );
+function updateConversation(convs: Conversation[], id: string, fn: (c: Conversation) => Conversation) {
+  return convs.map((c) => (c.id === id ? fn(c) : c));
 }
 
-function sortConversations(conversations: Conversation[]) {
-  return [...conversations].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+function sortConversations(convs: Conversation[]) {
+  return [...convs].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
 }
 
 export function useChatModel() {
+  const [characters, setCharacters] = useState<Character[]>(FALLBACK_CHARACTERS);
+  const [activeCharacterId, setActiveCharacterId] = useState<string>(loadActiveCharacterId);
   const [conversations, setConversations] = useState<Conversation[]>(() =>
-    loadConversations(),
+    loadConversations(loadActiveCharacterId()),
   );
   const [activeConversationId, setActiveConversationId] = useState(
-    () => loadConversations()[0]?.id ?? createConversation().id,
+    () => loadConversations(loadActiveCharacterId())[0]?.id,
   );
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
   const [streamError, setStreamError] = useState<string | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
 
+  // Fetch characters from backend, fall back to hardcoded list
+  useEffect(() => {
+    fetch("/api/v1/characters")
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => { if (Array.isArray(data) && data.length > 0) setCharacters(data); })
+      .catch(() => {});
+  }, []);
+
+  // Persist conversations and active character
   useEffect(() => {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(conversations));
   }, [conversations]);
 
   useEffect(() => {
-    if (!conversations.some((conversation) => conversation.id === activeConversationId)) {
-      setActiveConversationId(conversations[0]?.id ?? createConversation().id);
+    window.localStorage.setItem(CHARACTER_KEY, activeCharacterId);
+  }, [activeCharacterId]);
+
+  // Keep activeConversationId valid
+  useEffect(() => {
+    if (!conversations.some((c) => c.id === activeConversationId)) {
+      setActiveConversationId(conversations[0]?.id);
     }
   }, [activeConversationId, conversations]);
 
-  useEffect(() => {
-    return () => {
-      wsRef.current?.close();
-    };
-  }, []);
+  useEffect(() => () => { wsRef.current?.close(); }, []);
 
   const activeConversation =
-    conversations.find((conversation) => conversation.id === activeConversationId) ??
-    conversations[0];
+    conversations.find((c) => c.id === activeConversationId) ?? conversations[0];
+
+  const activeCharacter =
+    characters.find((c) => c.id === (activeConversation?.characterId ?? activeCharacterId))
+    ?? characters[0];
+
+  const selectCharacter = (characterId: string) => {
+    setActiveCharacterId(characterId);
+  };
 
   const createNewConversation = () => {
     if (streaming) return;
-
-    const nextConversation = createConversation();
-    setConversations((prev) => sortConversations([nextConversation, ...prev]));
-    setActiveConversationId(nextConversation.id);
+    const next = createConversation(activeCharacterId);
+    setConversations((prev) => sortConversations([next, ...prev]));
+    setActiveConversationId(next.id);
     setInput("");
     setStreamError(null);
   };
@@ -125,47 +133,27 @@ export function useChatModel() {
 
   const deleteConversation = (conversationId: string) => {
     if (streaming || conversations.length === 1) return;
-
-    const remaining = conversations.filter(
-      (conversation) => conversation.id !== conversationId,
-    );
+    const remaining = conversations.filter((c) => c.id !== conversationId);
     setConversations(remaining);
-
-    if (conversationId === activeConversationId) {
-      setActiveConversationId(remaining[0].id);
-    }
+    if (conversationId === activeConversationId) setActiveConversationId(remaining[0].id);
   };
 
-  const insertEmoji = (emoji: string) => {
-    setInput((prev) => `${prev}${emoji}`);
-  };
+  const insertEmoji = (emoji: string) => setInput((prev) => `${prev}${emoji}`);
 
   const sendMessage = () => {
     const trimmed = input.trim();
     if (!trimmed || streaming || !activeConversation) return;
 
     const sentAt = nowIso();
-    const userMessage: Message = {
-      id: createId(),
-      role: "user",
-      content: trimmed,
-      createdAt: sentAt,
-    };
-    const assistantMessage: Message = {
-      id: createId(),
-      role: "assistant",
-      content: "",
-      createdAt: sentAt,
-    };
-
+    const userMessage: Message = { id: createId(), role: "user", content: trimmed, createdAt: sentAt };
+    const assistantMessage: Message = { id: createId(), role: "assistant", content: "", createdAt: sentAt };
     const nextMessages = [...activeConversation.messages, userMessage, assistantMessage];
-    const nextTitle = titleFromMessages(nextMessages);
 
     setConversations((prev) =>
       sortConversations(
-        updateConversationRecord(prev, activeConversation.id, (conversation) => ({
-          ...conversation,
-          title: nextTitle,
+        updateConversation(prev, activeConversation.id, (c) => ({
+          ...c,
+          title: titleFromMessages(nextMessages),
           updatedAt: sentAt,
           messages: nextMessages,
         })),
@@ -179,37 +167,23 @@ export function useChatModel() {
     wsRef.current = ws;
 
     ws.onopen = () => {
-      ws.send(
-        JSON.stringify({
-          messages: nextMessages.map(({ role, content }) => ({ role, content })),
-          model: DEFAULT_MODEL,
-        }),
-      );
+      ws.send(JSON.stringify({
+        messages: nextMessages.map(({ role, content }) => ({ role, content })),
+        model: DEFAULT_MODEL,
+        bot_name: activeCharacter?.bot_name,
+      }));
     };
 
     ws.onmessage = (event) => {
       const chunk: StreamChunk = JSON.parse(event.data);
-      if (chunk.done) {
-        ws.close();
-        setStreaming(false);
-        return;
-      }
-
+      if (chunk.done) { ws.close(); setStreaming(false); return; }
       setConversations((prev) =>
         sortConversations(
-          updateConversationRecord(prev, activeConversation.id, (conversation) => {
-            const updatedMessages = [...conversation.messages];
-            const last = updatedMessages[updatedMessages.length - 1];
-            updatedMessages[updatedMessages.length - 1] = {
-              ...last,
-              content: last.content + chunk.delta,
-            };
-
-            return {
-              ...conversation,
-              updatedAt: nowIso(),
-              messages: updatedMessages,
-            };
+          updateConversation(prev, activeConversation.id, (c) => {
+            const msgs = [...c.messages];
+            const last = msgs[msgs.length - 1];
+            msgs[msgs.length - 1] = { ...last, content: last.content + chunk.delta };
+            return { ...c, updatedAt: nowIso(), messages: msgs };
           }),
         ),
       );
@@ -220,20 +194,21 @@ export function useChatModel() {
       setStreaming(false);
     };
 
-    ws.onclose = () => {
-      wsRef.current = null;
-      setStreaming(false);
-    };
+    ws.onclose = () => { wsRef.current = null; setStreaming(false); };
   };
 
   return {
+    activeCharacter,
+    activeCharacterId,
     activeConversation,
     activeConversationId,
+    characters,
     conversations,
     createNewConversation,
     deleteConversation,
     input,
     insertEmoji,
+    selectCharacter,
     selectConversation,
     sendMessage,
     setInput,

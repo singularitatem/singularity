@@ -1,9 +1,16 @@
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
-from backend.api.schemas.chat import ChatRequestDTO, ChatResponseDTO
+from backend.api.schemas.chat import CharacterDTO, ChatRequestDTO, ChatResponseDTO
 from backend.api.deps import get_chat_service
 from backend.services.chat import ChatService
 
 router = APIRouter()
+
+
+@router.get("/characters", response_model=list[CharacterDTO])
+async def list_characters(
+    service: ChatService = Depends(get_chat_service),
+) -> list[CharacterDTO]:
+    return [CharacterDTO(**c.model_dump()) for c in service.characters()]
 
 
 @router.post("/chat", response_model=ChatResponseDTO)
