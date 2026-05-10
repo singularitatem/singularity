@@ -13,14 +13,23 @@ interface Props {
 }
 
 export function ChatWindow({ character, messages, speakingMessageId, streaming, onSpeak, onStop }: Props) {
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const windowRef = useRef<HTMLDivElement>(null);
+  const prevLengthRef = useRef(0);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    const el = windowRef.current;
+    if (!el) return;
+    const newMessage = messages.length !== prevLengthRef.current;
+    prevLengthRef.current = messages.length;
+    // Scroll to bottom on new message; during streaming, scroll only if already near bottom.
+    const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
+    if (newMessage || nearBottom) {
+      el.scrollTo({ top: el.scrollHeight, behavior: newMessage ? "smooth" : "instant" });
+    }
   }, [messages, streaming]);
 
   return (
-    <div className={styles.window}>
+    <div className={styles.window} ref={windowRef}>
       {messages.length === 0 ? (
         <div className={styles.emptyState}>
           {character && <p className={styles.emptyEmoji}>{character.emoji}</p>}
@@ -47,7 +56,6 @@ export function ChatWindow({ character, messages, speakingMessageId, streaming, 
           />
         ))
       )}
-      <div ref={bottomRef} />
     </div>
   );
 }

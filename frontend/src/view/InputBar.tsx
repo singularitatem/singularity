@@ -34,7 +34,7 @@ export function InputBar({
             onClick={() => setShowEmojiPicker((prev) => !prev)}
             type="button"
           >
-            :)
+            😊
           </button>
           <span className={styles.helper}>Enter to send. Shift+Enter for a new line.</span>
         </div>

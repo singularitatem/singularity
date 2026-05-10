@@ -57,10 +57,7 @@ export default function App() {
 
         <main className={styles.main}>
           <header className={styles.header}>
-            <div>
-              <p className={styles.kicker}>Local AI Studio</p>
-              <h1 className={styles.title}>Singularity</h1>
-            </div>
+            <h1 className={styles.title}>Singularity</h1>
             <div className={styles.headerMeta}>
               <button
                 className={styles.modelBadge}
@@ -70,8 +67,9 @@ export default function App() {
               >
                 {activeCharacter ? `${activeCharacter.emoji} ${activeCharacter.name}` : "No character"}
               </button>
-              <span className={styles.status}>
-                {streaming ? "Streaming response…" : "Ready to chat"}
+              <span className={`${styles.status} ${streaming ? styles.statusStreaming : styles.statusReady}`}>
+                <span className={styles.statusDot} />
+                {streaming ? "Responding…" : "Ready"}
               </span>
             </div>
           </header>

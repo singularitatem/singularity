@@ -43,8 +43,7 @@ export function Sidebar({
   return (
     <aside className={styles.sidebar}>
       <div className={styles.brand}>
-        <p className={styles.brandEyebrow}>Workspace</p>
-        <h2 className={styles.brandTitle}>Conversation library</h2>
+        <h2 className={styles.brandTitle}>Conversations</h2>
       </div>
 
       <CharacterPicker
@@ -90,7 +89,6 @@ export function Sidebar({
                 <span className={styles.itemPreview}>{preview}</span>
                 <div className={styles.itemFooter}>
                   <span className={styles.itemCount}>{conversation.messages.length} messages</span>
-                  <span className={styles.itemCount}>{isActive && streaming ? "Live" : "Saved"}</span>
                 </div>
               </button>
               {conversations.length > 1 ? (
@@ -98,9 +96,10 @@ export function Sidebar({
                   className={styles.deleteButton}
                   disabled={streaming}
                   onClick={() => onDeleteConversation(conversation.id)}
+                  title="Delete conversation"
                   type="button"
                 >
-                  Delete
+                  ×
                 </button>
               ) : null}
             </div>

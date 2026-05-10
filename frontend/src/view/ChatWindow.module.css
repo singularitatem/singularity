@@ -6,6 +6,24 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  scroll-behavior: smooth;
+}
+
+.window::-webkit-scrollbar {
+  width: 6px;
+}
+
+.window::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.window::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 999px;
+}
+
+.window::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
 }
 
 .emptyState {

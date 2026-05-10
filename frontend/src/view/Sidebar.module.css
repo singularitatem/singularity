@@ -15,17 +15,10 @@
   padding: 6px 4px 0;
 }
 
-.brandEyebrow {
-  margin: 0 0 6px;
-  color: var(--accent-cool);
-  text-transform: uppercase;
-  letter-spacing: 0.18em;
-  font-size: 0.72rem;
-}
-
 .brandTitle {
   margin: 0 0 16px;
-  font-size: 1.5rem;
+  font-size: 1.3rem;
+  font-weight: 700;
   line-height: 1.1;
 }
 
@@ -121,17 +114,36 @@
 
 .deleteButton {
   position: absolute;
-  top: 12px;
-  right: 12px;
-  border: 0;
+  top: 10px;
+  right: 10px;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: 999px;
   padding: 0;
   background: transparent;
-  color: #ffb29a;
-  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  line-height: 1;
+  opacity: 0;
+  transition: opacity 130ms ease, color 130ms ease, background 130ms ease, border-color 130ms ease;
+}
+
+.item:hover .deleteButton {
+  opacity: 1;
+}
+
+.deleteButton:hover {
+  color: #ff9a8a;
+  background: rgba(255, 100, 80, 0.1);
+  border-color: rgba(255, 100, 80, 0.3);
 }
 
 .deleteButton:disabled {
-  opacity: 0.5;
+  opacity: 0.3;
   cursor: not-allowed;
 }
 
