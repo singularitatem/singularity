@@ -13,7 +13,8 @@ class Character(BaseModel):
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+    # .env takes precedence over .env.example; latter acts as committed defaults
+    model_config = SettingsConfigDict(env_file=(".env.example", ".env"), env_file_encoding="utf-8")
 
     env: str = "development"
     cors_origins: list[str] = ["http://localhost:5173", "http://localhost:3000"]
@@ -24,6 +25,7 @@ class Settings(BaseSettings):
     # Chai
     chai_api_key: str = ""
     chai_user_name: str = "User"
+
 
     characters: list[Character] = Field(
         default=[

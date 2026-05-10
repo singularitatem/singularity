@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useCharacterStore } from "./model/useCharacterStore";
 import { useChatModel } from "./model/useChatModel";
 import { useSpeech } from "./model/useSpeech";
+import type { Character } from "./types";
+import { CharacterDetailModal } from "./view/CharacterDetailModal";
 import { CharacterModal } from "./view/CharacterModal";
 import { ChatWindow } from "./view/ChatWindow";
 import { InputBar } from "./view/InputBar";
@@ -11,6 +13,8 @@ import styles from "./App.module.css";
 export default function App() {
   const { characters, addCharacter, updateCharacter, deleteCharacter } = useCharacterStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [detailCharacter, setDetailCharacter] = useState<Character | null | undefined>(undefined);
+  // undefined = closed, null = create mode, Character = edit mode
 
   const {
     activeCharacter,
@@ -111,11 +115,20 @@ export default function App() {
         <CharacterModal
           activeCharacterId={activeCharacterId}
           characters={characters}
-          onAdd={addCharacter}
           onClose={() => setIsModalOpen(false)}
-          onDelete={deleteCharacter}
           onSelect={(id) => { selectCharacter(id); }}
+          onOpenDetail={(c) => { setDetailCharacter(c); }}
+        />
+      )}
+
+      {detailCharacter !== undefined && (
+        <CharacterDetailModal
+          character={detailCharacter}
+          onClose={() => setDetailCharacter(undefined)}
+          onAdd={addCharacter}
           onUpdate={updateCharacter}
+          onDelete={deleteCharacter}
+          onSelect={selectCharacter}
         />
       )}
     </div>

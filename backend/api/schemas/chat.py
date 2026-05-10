@@ -38,3 +38,17 @@ class CharacterDTO(BaseModel):
     description: str
     emoji: str
     system_prompt: Optional[str] = None
+
+
+class VoiceInferenceRequest(BaseModel):
+    name: str
+    bot_name: Optional[str] = None
+    description: str
+    system_prompt: Optional[str] = None
+
+
+class VoiceInferenceResponse(BaseModel):
+    pitch: float
+    rate: float
+    gender: str  # "male" | "female" | "neutral"
+    accent: str  # "american" | "british" | "australian" | "irish" | "scottish" | "neutral"

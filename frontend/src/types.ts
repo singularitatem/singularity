@@ -1,5 +1,12 @@
 export type Role = "user" | "assistant" | "system";
 
+export interface VoiceProfile {
+  pitch: number;
+  rate: number;
+  gender?: string;
+  accent?: string;
+}
+
 export interface Message {
   id: string;
   role: Role;
@@ -15,6 +22,7 @@ export interface Character {
   emoji: string;
   systemPrompt?: string;
   isCustom?: boolean;
+  voiceProfile?: VoiceProfile;
 }
 
 export interface Conversation {
