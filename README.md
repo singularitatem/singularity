@@ -1,36 +1,76 @@
 # Singularity
+
 <p align="left">
-    <a href="https://circleci.com/gh/singularitatem/singularity">
-        <img alt="Build" src="https://img.shields.io/circleci/build/github/singularitatem/singularity/master">
-    </a>
-    <a href="https://github.com/singularitatem/singularity/blob/master/LICENSE">
-        <img alt="GitHub" src="https://img.shields.io/github/license/singularitatem/singularity.svg?color=blue">
-    </a>
-    <a href="https://github.com/singularitatem/singluarity/releases">
-        <img alt="GitHub" src="https://img.shields.io/github/release/singularitatem/singularity.svg">
-    </a>
+  <img alt="Python" src="https://img.shields.io/badge/backend-FastAPI-009688?logo=fastapi&logoColor=white">
+  <img alt="React" src="https://img.shields.io/badge/frontend-React-61dafb?logo=react&logoColor=black">
+  <a href="https://github.com/singularitatem/singularity/blob/master/LICENSE">
+    <img alt="License" src="https://img.shields.io/github/license/singularitatem/singularity.svg?color=blue">
+  </a>
 </p>
 
-Singularity is designed to be a simple chat bot application.
-This project is designed to experiment various state-of-the-art NLP models, with a full stack of serving layer deployed in aws.
+A local AI chat studio. Talk to richly-configured AI characters over a streaming WebSocket connection — all running on your machine.
 
+## Features
 
-This project is using [bazel](https://bazel.build)
+- **Streaming chat** — responses stream word-by-word via WebSocket
+- **Character system** — choose from built-in characters (Einstein, Socrates, Ada Lovelace, Tesla) or create your own with a custom name, emoji, description, and system prompt
+- **Markdown rendering** — assistant responses render full GFM markdown: headers, lists, code blocks, tables, blockquotes
+- **Voice** — read any message aloud with one click; voice pitch and rate are tuned per character using the browser's Web Speech API
+- **Conversation library** — multiple parallel conversations, persisted in `localStorage`, with per-conversation character binding
+- **Pluggable inference** — swap the backend AI provider by implementing a single abstract interface (`InferenceBackend`)
 
+## Quick start
 
-### greeter
+```bash
+make install   # one-time: pip install + npm install
+make dev       # starts backend :8000 and frontend :5173 in parallel
+```
 
-* Start a gRPC server
+Then open [http://localhost:5173](http://localhost:5173).
 
-`bazel run //examples/go/greeter/server -- -port=8080`
+You can also run each process separately:
 
-* Start a gRPC client talking to the server
+```bash
+python3 -m uvicorn backend.main:app --reload --port 8000
+cd frontend && npm run dev
+```
 
-`bazel run //examples/go/greeter/client -- -address=localhost -port=8080 -name=<your name>`
+## Configuration
 
-### httpserver
+Copy `.env.example` to `.env` (or set environment variables directly):
 
-* Start a http server
+| Variable | Default | Description |
+|---|---|---|
+| `PROVIDER` | `chai` | Inference backend (`chai` or `echo`) |
+| `CHAI_API_KEY` | — | API key for the Chai inference service |
+| `CHAI_USER_NAME` | `User` | Display name sent to Chai as the human turn |
 
-`bazel run //examples/go/httpserver -- -port=8080`
+Set `PROVIDER=echo` to run fully offline with a dev echo backend (no API key needed).
 
+## Architecture
+
+```
+proto/chat.proto          ← message shape source of truth
+backend/
+  api/routes/chat.py      ← REST POST /api/v1/chat + WebSocket /api/v1/chat/stream
+  inference/
+    interface.py          ← abstract InferenceBackend
+    chai_backend.py       ← Chai API (default)
+    echo.py               ← no-op dev backend
+  services/chat.py        ← ChatService (thin orchestration layer)
+  core/settings.py        ← pydantic-settings config + built-in character definitions
+frontend/src/
+  model/useChatModel.ts   ← WebSocket streaming, conversation state
+  model/useCharacterStore.ts ← character CRUD (builtins from API + custom in localStorage)
+  model/useSpeech.ts      ← Web Speech API wrapper with per-character voice profiles
+  view/                   ← pure React view components (CSS modules, dark theme)
+```
+
+**Adding a new inference backend:** implement `InferenceBackend` in `backend/inference/`, then set `PROVIDER=<your_key>` in `.env` and register it in `backend/inference/factory.py`.
+
+## Development
+
+```bash
+make test      # run backend tests (pytest)
+make proto     # regenerate Python stubs from proto/chat.proto
+```
