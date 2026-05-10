@@ -1,2 +1,20 @@
+# Bazel
+bazel-*
 .circleci
-bazel*
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+backend/generated/
+
+# Node / frontend
+node_modules/
+frontend/dist/
+frontend/.vite/
+pnpm-lock.yaml
+
+# Env
+.env
+.env.local

@@ -1,0 +1,34 @@
+module(
+    name = "singularity",
+    version = "0.1.0",
+)
+
+# Python
+bazel_dep(name = "rules_python", version = "0.40.0")
+
+python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+python.toolchain(python_version = "3.11")
+
+pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
+pip.parse(
+    hub_name = "pip",
+    python_version = "3.11",
+    requirements_lock = "//backend:requirements_lock.txt",
+)
+use_repo(pip, "pip")
+
+# Proto
+bazel_dep(name = "rules_proto", version = "6.0.2")
+bazel_dep(name = "protobuf", version = "29.3", repo_name = "com_google_protobuf")
+
+# JS / React
+bazel_dep(name = "rules_js", version = "2.1.0")
+bazel_dep(name = "aspect_rules_ts", version = "3.4.0")
+bazel_dep(name = "aspect_bazel_lib", version = "2.9.4")
+
+npm = use_extension("@rules_js//npm:extensions.bzl", "npm")
+npm.npm_translate_lock(
+    name = "npm",
+    pnpm_lock = "//frontend:pnpm-lock.yaml",
+)
+use_repo(npm, "npm")
