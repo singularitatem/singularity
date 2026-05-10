@@ -18,7 +18,7 @@
 .meta {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   margin-bottom: 8px;
   padding: 0 6px;
 }
@@ -33,6 +33,44 @@
 .time {
   font-size: 0.8rem;
   color: var(--text-muted);
+}
+
+.speakButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted);
+  padding: 0;
+  opacity: 0;
+  transition: opacity 130ms ease, color 130ms ease, background 130ms ease;
+}
+
+.meta:hover .speakButton {
+  opacity: 1;
+}
+
+.speakButton:hover {
+  color: var(--accent-cool);
+  background: rgba(136, 236, 255, 0.1);
+  border-color: rgba(136, 236, 255, 0.2);
+}
+
+.speakButtonActive {
+  opacity: 1;
+  color: var(--accent);
+  background: rgba(255, 139, 93, 0.12);
+  border-color: rgba(255, 139, 93, 0.3);
+  animation: speakPulse 1.4s ease-in-out infinite;
+}
+
+@keyframes speakPulse {
+  0%, 100% { opacity: 0.75; }
+  50%       { opacity: 1; }
 }
 
 .bubble {

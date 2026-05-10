@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useCharacterStore } from "./model/useCharacterStore";
 import { useChatModel } from "./model/useChatModel";
+import { useSpeech } from "./model/useSpeech";
 import { CharacterModal } from "./view/CharacterModal";
 import { ChatWindow } from "./view/ChatWindow";
 import { InputBar } from "./view/InputBar";
@@ -33,6 +34,8 @@ export default function App() {
   const recentCharacters = recentCharacterIds
     .map((id) => characters.find((c) => c.id === id))
     .filter((c): c is typeof characters[0] => c !== undefined);
+
+  const { speakingMessageId, speak, stop } = useSpeech();
 
   return (
     <div className={styles.page}>
@@ -88,7 +91,10 @@ export default function App() {
             <ChatWindow
               character={activeCharacter}
               messages={activeConversation?.messages ?? []}
+              speakingMessageId={speakingMessageId}
               streaming={streaming}
+              onSpeak={speak}
+              onStop={stop}
             />
 
             <InputBar

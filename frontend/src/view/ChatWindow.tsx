@@ -6,10 +6,13 @@ import styles from "./ChatWindow.module.css";
 interface Props {
   character?: Character;
   messages: Message[];
+  speakingMessageId: string | null;
   streaming: boolean;
+  onSpeak: (id: string, text: string, character?: Character) => void;
+  onStop: () => void;
 }
 
-export function ChatWindow({ character, messages, streaming }: Props) {
+export function ChatWindow({ character, messages, speakingMessageId, streaming, onSpeak, onStop }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -36,8 +39,11 @@ export function ChatWindow({ character, messages, streaming }: Props) {
           <MessageBubble
             key={message.id}
             character={character}
+            isSpeaking={speakingMessageId === message.id}
             message={message}
             streaming={streaming}
+            onSpeak={(text) => onSpeak(message.id, text, character)}
+            onStop={onStop}
           />
         ))
       )}
