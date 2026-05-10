@@ -1,5 +1,0 @@
-build --enable_bzlmod
-build --python_version=PY3
-
-# Show test output on failure
-test --test_output=errors

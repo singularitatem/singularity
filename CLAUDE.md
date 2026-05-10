@@ -6,42 +6,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Singularity is a full-stack local chat app. The data contract is defined in proto, the backend is FastAPI (Python), and the frontend is React. The AI inference layer is abstracted behind an interface so any provider (Anthropic, OpenAI, local model) can be swapped in.
 
-## Running locally (without Bazel)
+## Running locally
 
 ```bash
-# Backend
-pip install -r backend/requirements.in
-uvicorn backend.main:app --reload --port 8000
-
-# Frontend (separate terminal)
-cd frontend && npm install && npm run dev   # opens http://localhost:5173
-
-# Or both together
-make dev
+make install   # one-time: pip install + npm install
+make dev       # backend :8000 + frontend :5173 in parallel
 ```
 
-## Bazel (MODULE.bazel / Bzlmod)
-
+Or separately:
 ```bash
-# Python backend
-bazel run //backend:server
-
-# Frontend production build (requires pnpm-lock.yaml — run `cd frontend && pnpm install` first)
-bazel build //frontend:build
-
-# Proto targets
-bazel build //proto:chat_proto
-
-# Tests
-bazel test //...
+python3 -m uvicorn backend.main:app --reload --port 8000
+cd frontend && npm run dev
 ```
 
-To regenerate `backend/requirements_lock.txt` after changing `requirements.in`:
-```bash
-make requirements-lock   # uses pip-compile
-```
-
-To regenerate Python/gRPC stubs from proto:
+To regenerate Python/gRPC stubs from `proto/chat.proto`:
 ```bash
 make proto   # outputs to backend/generated/
 ```
