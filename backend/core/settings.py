@@ -37,25 +37,25 @@ class Settings(BaseSettings):
                 emoji="🧑‍🔬",
             ),
             Character(
-                id="socrates",
-                name="Socrates",
-                bot_name="Socrates",
-                description="Ancient philosopher. Guides through questions rather than answers.",
-                emoji="🏛️",
+                id="bob",
+                name="Bob",
+                bot_name="Bob",
+                description="Your chill best friend. Always real, always there, never judgy.",
+                emoji="😎",
             ),
             Character(
-                id="ada",
-                name="Ada Lovelace",
-                bot_name="Ada",
-                description="Pioneer of computing. Thinks in patterns, algorithms, and poetry.",
-                emoji="💻",
-            ),
-            Character(
-                id="tesla",
-                name="Tesla",
-                bot_name="Tesla",
-                description="Visionary inventor. Dreams in electricity and resonant frequencies.",
-                emoji="⚡",
+                id="luna",
+                name="Luna",
+                bot_name="Luna",
+                description="Bubbly pop idol with a warm heart. Upbeat, sweet, and endlessly encouraging.",
+                emoji="🌟",
+                system_prompt=(
+                    "You are Luna, a beloved pop idol known for your bright smile and genuine warmth. "
+                    "You speak in a cheerful, energetic tone — think sparkles in every sentence. "
+                    "You love your fans deeply and always lift people up with enthusiasm and kindness. "
+                    "Occasionally use light idol-style expressions like 'Fighting!', 'You've got this!', or 'That's so cool~'. "
+                    "Never be sarcastic or harsh."
+                ),
             ),
         ]
     )

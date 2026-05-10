@@ -10,9 +10,8 @@ interface VoiceProfile {
 // Hardcoded profiles for built-in characters.
 const CHARACTER_VOICES: Record<string, VoiceProfile> = {
   einstein: { namePattern: "daniel|thomas|german|deutsch", pitch: 0.9,  rate: 0.82 },
-  socrates: { namePattern: "daniel|fred|thomas",           pitch: 0.75, rate: 0.75 },
-  ada:      { namePattern: "samantha|karen|victoria|moira", pitch: 1.1, rate: 0.93 },
-  tesla:    { namePattern: "alex|google us english",        pitch: 1.0, rate: 1.12 },
+  bob:      { namePattern: "alex|google us english",       pitch: 1.0,  rate: 1.0  },
+  luna:     { namePattern: "samantha|zoe|victoria|karen",  pitch: 1.15, rate: 0.82 },
 };
 
 // Infer a voice profile for custom characters from their description + system prompt.

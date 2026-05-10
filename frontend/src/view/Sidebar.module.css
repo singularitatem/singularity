@@ -9,6 +9,9 @@
     linear-gradient(180deg, rgba(16, 19, 29, 0.92), rgba(10, 13, 21, 0.95));
   box-shadow: var(--shadow-xl);
   backdrop-filter: blur(18px);
+  min-height: 0;
+  overflow: hidden;
+  height: 100%;
 }
 
 .brand {
@@ -46,8 +49,26 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+  flex: 1;
   min-height: 0;
   overflow-y: auto;
+}
+
+.list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.list::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 999px;
+}
+
+.list::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
 }
 
 .item {
