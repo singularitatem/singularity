@@ -50,20 +50,20 @@ Set `PROVIDER=echo` to run fully offline with a dev echo backend (no API key nee
 ## Architecture
 
 ```
-proto/chat.proto          ← message shape source of truth
 backend/
-  api/routes/chat.py      ← REST POST /api/v1/chat + WebSocket /api/v1/chat/stream
+  api/routes/chat.py         ← REST GET /api/v1/characters, POST /api/v1/chat
+                                  WebSocket /api/v1/chat/stream (JSON chunks)
   inference/
-    interface.py          ← abstract InferenceBackend
-    chai_backend.py       ← Chai API (default)
-    echo.py               ← no-op dev backend
-  services/chat.py        ← ChatService (thin orchestration layer)
-  core/settings.py        ← pydantic-settings config + built-in character definitions
+    interface.py             ← abstract InferenceBackend
+    chai_backend.py          ← Chai API (default)
+    echo.py                  ← no-op dev backend (no key needed)
+  services/chat.py           ← ChatService
+  core/settings.py           ← pydantic-settings config + built-in character list
 frontend/src/
-  model/useChatModel.ts   ← WebSocket streaming, conversation state
+  model/useChatModel.ts      ← WebSocket streaming, conversation state
   model/useCharacterStore.ts ← character CRUD (builtins from API + custom in localStorage)
-  model/useSpeech.ts      ← Web Speech API wrapper with per-character voice profiles
-  view/                   ← pure React view components (CSS modules, dark theme)
+  model/useSpeech.ts         ← Web Speech API with per-character voice profiles
+  view/                      ← React view components (CSS modules, dark theme)
 ```
 
 **Adding a new inference backend:** implement `InferenceBackend` in `backend/inference/`, then set `PROVIDER=<your_key>` in `.env` and register it in `backend/inference/factory.py`.
@@ -72,5 +72,4 @@ frontend/src/
 
 ```bash
 make test      # run backend tests (pytest)
-make proto     # regenerate Python stubs from proto/chat.proto
 ```

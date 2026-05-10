@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     default_character_id: str = "einstein"
 
     # Chai
-    chai_api_key: str = "CR_14d43f2bf78b4b0590c2a8b87f354746"
+    chai_api_key: str = ""
     chai_user_name: str = "User"
 
     characters: list[Character] = Field(

@@ -1,15 +1,4 @@
-.PHONY: proto backend frontend dev install test requirements-lock
-
-PROTO_SRC = proto/chat.proto
-PROTO_OUT_PY = backend/generated
-
-proto:
-	mkdir -p $(PROTO_OUT_PY)
-	python3 -m grpc_tools.protoc \
-		-I proto \
-		--python_out=$(PROTO_OUT_PY) \
-		--grpc_python_out=$(PROTO_OUT_PY) \
-		$(PROTO_SRC)
+.PHONY: backend frontend dev install test requirements-lock
 
 install:
 	python3 -m pip install -r backend/requirements.in
