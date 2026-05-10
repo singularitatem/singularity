@@ -13,7 +13,7 @@ A local AI chat studio. Talk to richly-configured AI characters over a streaming
 ## Features
 
 - **Streaming chat** — responses stream word-by-word via WebSocket
-- **Character system** — choose from built-in characters (Einstein, Socrates, Ada Lovelace, Tesla) or create your own with a custom name, emoji, description, and system prompt
+- **Character system** — choose from built-in characters (Einstein, Bob, Luna) or create your own with a custom name, emoji, description, and system prompt
 - **Markdown rendering** — assistant responses render full GFM markdown: headers, lists, code blocks, tables, blockquotes
 - **Voice** — read any message aloud with one click; voice pitch and rate are tuned per character using the browser's Web Speech API
 - **Conversation library** — multiple parallel conversations, persisted in `localStorage`, with per-conversation character binding
@@ -66,7 +66,7 @@ frontend/src/
   view/                      ← React view components (CSS modules, dark theme)
 ```
 
-**Adding a new inference backend:** implement `InferenceBackend` in `backend/inference/`, then set `PROVIDER=<your_key>` in `.env` and register it in `backend/inference/factory.py`.
+**Adding a new inference backend:** implement `InferenceBackend` in `backend/inference/`, register it in `backend/inference/factory.py`, then set `PROVIDER=<backend_name>` in `.env`.
 
 ## Development
 

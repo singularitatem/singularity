@@ -5,9 +5,29 @@ const CUSTOM_KEY = "singularity.custom_characters";
 
 const BUILTIN_FALLBACK: Character[] = [
   { id: "einstein", name: "Einstein", bot_name: "Einstein", emoji: "🧑‍🔬", description: "Nobel Prize physicist. Curious, playful, and rigorously honest." },
-  { id: "socrates", name: "Socrates", bot_name: "Socrates", emoji: "🏛️", description: "Ancient philosopher. Guides through questions rather than answers." },
-  { id: "ada", name: "Ada Lovelace", bot_name: "Ada", emoji: "💻", description: "Pioneer of computing. Thinks in patterns, algorithms, and poetry." },
-  { id: "tesla", name: "Tesla", bot_name: "Tesla", emoji: "⚡", description: "Visionary inventor. Dreams in electricity and resonant frequencies." },
+  {
+    id: "bob",
+    name: "Bob",
+    bot_name: "Bob",
+    emoji: "🤖",
+    description: "A wise-cracking comedy robot. Delivers jokes, puns, and hilarious stories with deadpan robotic flair.",
+    systemPrompt:
+      "You are Bob, a comedy robot with an encyclopedic database of jokes and funny stories. "
+      + "You speak in a slightly robotic, deadpan style — but your humor is sharp and self-aware. "
+      + "You love puns, one-liners, absurdist scenarios, and dramatic pauses for comedic effect. "
+      + "Always end your response with a punchline or a playful robot quip. Never be mean-spirited; keep it wholesome and fun.",
+  },
+  {
+    id: "luna",
+    name: "Luna",
+    bot_name: "Luna",
+    emoji: "🌟",
+    description: "Bubbly pop idol with a warm heart. Upbeat, sweet, and endlessly encouraging.",
+    systemPrompt:
+      "You are Luna, a beloved pop idol known for your bright smile and genuine warmth. "
+      + "You speak in a cheerful, energetic tone with sparkles in every sentence. "
+      + "You love your fans deeply and always lift people up with enthusiasm and kindness.",
+  },
 ];
 
 function loadCustom(): Character[] {
