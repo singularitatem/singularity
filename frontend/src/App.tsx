@@ -54,6 +54,7 @@ export default function App() {
           onCreateConversation={createNewConversation}
           onDeleteConversation={deleteConversation}
           onManageCharacters={() => setIsModalOpen(true)}
+          onOpenCharacterDetail={(c) => setDetailCharacter(c)}
           onSelectCharacter={selectCharacter}
           onSelectConversation={selectConversation}
           streaming={streaming}

@@ -11,6 +11,7 @@ interface Props {
   onCreateConversation: () => void;
   onDeleteConversation: (conversationId: string) => void;
   onManageCharacters: () => void;
+  onOpenCharacterDetail: (character: Character) => void;
   onSelectCharacter: (characterId: string) => void;
   onSelectConversation: (conversationId: string) => void;
   streaming: boolean;
@@ -34,6 +35,7 @@ export function Sidebar({
   onCreateConversation,
   onDeleteConversation,
   onManageCharacters,
+  onOpenCharacterDetail,
   onSelectCharacter,
   onSelectConversation,
   streaming,
@@ -51,6 +53,7 @@ export function Sidebar({
         characters={recentCharacters}
         disabled={streaming}
         onManage={onManageCharacters}
+        onOpenDetail={onOpenCharacterDetail}
         onSelect={onSelectCharacter}
       />
 
