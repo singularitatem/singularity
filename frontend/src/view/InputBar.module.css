@@ -1,0 +1,38 @@
+.bar {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.input {
+  flex: 1;
+  padding: 0.625rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.input:focus {
+  border-color: #0070f3;
+}
+
+.button {
+  padding: 0.625rem 1.25rem;
+  border-radius: 6px;
+  background: #0070f3;
+  color: #fff;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.button:hover:not(:disabled) {
+  background: #005fcc;
+}
+
+.button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
