@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import AsyncIterator
+from typing import AsyncIterator, Optional
 
 
 @dataclass
@@ -9,12 +9,19 @@ class ChatMessage:
     content: str
 
 
+@dataclass
+class ChatRequest:
+    messages: list
+    model: str
+    temperature: Optional[float] = None
+    max_tokens: Optional[int] = None
+    conversation_id: Optional[str] = None
+
+
 class InferenceBackend(ABC):
     @abstractmethod
-    async def chat(self, messages: list[ChatMessage], model: str) -> str: ...
+    async def chat(self, request: ChatRequest) -> str: ...
 
     @abstractmethod
-    async def stream_chat(
-        self, messages: list[ChatMessage], model: str
-    ) -> AsyncIterator[str]:
-        yield  # makes this an async generator in subclasses
+    async def stream_chat(self, request: ChatRequest) -> AsyncIterator[str]:
+        yield

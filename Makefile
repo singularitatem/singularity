@@ -1,4 +1,4 @@
-.PHONY: proto backend frontend dev install requirements-lock
+.PHONY: proto backend frontend dev install test requirements-lock
 
 PROTO_SRC = proto/chat.proto
 PROTO_OUT_PY = backend/generated
@@ -23,6 +23,9 @@ frontend:
 
 dev:
 	$(MAKE) -j2 backend frontend
+
+test:
+	python3 -m pytest -v
 
 requirements-lock:
 	python3 -m piptools compile backend/requirements.in -o backend/requirements_lock.txt
