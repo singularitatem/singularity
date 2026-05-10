@@ -5,23 +5,32 @@ import styles from "./ChatWindow.module.css";
 
 interface Props {
   messages: Message[];
+  streaming: boolean;
 }
 
-export function ChatWindow({ messages }: Props) {
+export function ChatWindow({ messages, streaming }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages, streaming]);
 
   return (
     <div className={styles.window}>
-      {messages.length === 0 && (
-        <p className={styles.empty}>Send a message to start the conversation.</p>
+      {messages.length === 0 ? (
+        <div className={styles.emptyState}>
+          <p className={styles.emptyEyebrow}>Fresh space</p>
+          <h3 className={styles.emptyTitle}>Ask something that deserves a real conversation.</h3>
+          <p className={styles.emptyBody}>
+            Try brainstorming a roadmap, drafting a note, or riffing with emojis and
+            follow-up questions. Your recent chats stay in the sidebar.
+          </p>
+        </div>
+      ) : (
+        messages.map((message) => (
+          <MessageBubble key={message.id} message={message} streaming={streaming} />
+        ))
       )}
-      {messages.map((m, i) => (
-        <MessageBubble key={i} message={m} />
-      ))}
       <div ref={bottomRef} />
     </div>
   );

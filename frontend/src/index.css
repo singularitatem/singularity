@@ -1,11 +1,64 @@
-*, *::before, *::after {
+:root {
+  color-scheme: dark;
+  font-family: "Inter", "Avenir Next", "Segoe UI", sans-serif;
+  --bg: #090d16;
+  --bg-secondary: #0f1524;
+  --surface: rgba(19, 24, 38, 0.88);
+  --surface-strong: rgba(24, 30, 47, 0.96);
+  --surface-soft: rgba(255, 255, 255, 0.05);
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.14);
+  --text-primary: #f6f3ea;
+  --text-secondary: rgba(246, 243, 234, 0.72);
+  --text-muted: rgba(246, 243, 234, 0.5);
+  --accent: #ff8b5d;
+  --accent-strong: #ff6a3d;
+  --accent-cool: #88ecff;
+  --user-bubble: linear-gradient(135deg, #ff8c5b, #ff6a3d);
+  --assistant-bubble: rgba(255, 255, 255, 0.06);
+  --shadow-xl: 0 28px 60px rgba(0, 0, 0, 0.38);
+}
+
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
-html, body, #root {
+html,
+body,
+#root {
   margin: 0;
-  padding: 0;
-  height: 100%;
-  font-family: system-ui, -apple-system, sans-serif;
-  background: #f9f9f9;
+  min-height: 100%;
+}
+
+body {
+  background:
+    linear-gradient(145deg, #070b13 0%, #101726 52%, #151d2e 100%);
+  color: var(--text-primary);
+}
+
+body,
+button,
+input,
+textarea {
+  font-family: inherit;
+}
+
+button,
+input,
+textarea {
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+textarea {
+  resize: none;
+}
+
+::selection {
+  background: rgba(255, 139, 93, 0.3);
 }

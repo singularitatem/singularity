@@ -1,0 +1,131 @@
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 22px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 28px;
+  background:
+    linear-gradient(180deg, rgba(16, 19, 29, 0.92), rgba(10, 13, 21, 0.95));
+  box-shadow: var(--shadow-xl);
+  backdrop-filter: blur(18px);
+}
+
+.brand {
+  padding: 6px 4px 0;
+}
+
+.brandEyebrow {
+  margin: 0 0 6px;
+  color: var(--accent-cool);
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.72rem;
+}
+
+.brandTitle {
+  margin: 0 0 16px;
+  font-size: 1.5rem;
+  line-height: 1.1;
+}
+
+.createButton {
+  width: 100%;
+  min-height: 48px;
+  border: 1px solid rgba(255, 139, 93, 0.22);
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(255, 139, 93, 0.22), rgba(136, 236, 255, 0.12));
+  font-weight: 600;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.item {
+  position: relative;
+  text-align: left;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.03);
+  transition:
+    transform 140ms ease,
+    border-color 140ms ease,
+    background 140ms ease;
+}
+
+.item:hover {
+  transform: translateY(-1px);
+  border-color: var(--border-strong);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.itemActive {
+  border-color: rgba(255, 139, 93, 0.28);
+  background: rgba(255, 139, 93, 0.08);
+}
+
+.itemButton {
+  width: 100%;
+  text-align: left;
+  padding: 14px;
+  border: 0;
+  background: transparent;
+}
+
+.itemTop,
+.itemFooter {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+}
+
+.itemTitle {
+  font-size: 0.96rem;
+  font-weight: 600;
+}
+
+.itemTime,
+.itemCount {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+}
+
+.itemPreview {
+  display: block;
+  margin: 10px 0 12px;
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+  line-height: 1.5;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.deleteButton {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #ffb29a;
+  font-size: 0.8rem;
+}
+
+.deleteButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 980px) {
+  .sidebar {
+    max-height: none;
+  }
+}
