@@ -15,6 +15,7 @@ dev:
 
 test:
 	python3 -m pytest -v
+	cd frontend && npm test
 
 requirements-lock:
 	python3 -m piptools compile backend/requirements.in -o backend/requirements_lock.txt

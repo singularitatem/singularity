@@ -13,7 +13,7 @@ from slowapi.errors import RateLimitExceeded
 from backend.api.deps import get_real_ip
 from backend.api.routes.chat import router as chat_router
 from backend.api.routes.health import router as health_router
-from backend.core.logging import configure_logging
+from backend.telemetry.logging import configure_logging
 from backend.core.settings import Settings
 from backend.inference.factory import build_inference_backend
 from backend.services.chat import ChatService

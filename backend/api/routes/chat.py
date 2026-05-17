@@ -1,3 +1,4 @@
+import httpx
 import structlog
 from fastapi import APIRouter, Depends, HTTPException
 from slowapi import Limiter
@@ -12,6 +13,7 @@ from backend.api.schemas.chat import (
     VoiceInferenceRequest,
     VoiceInferenceResponse,
 )
+from backend.telemetry.metrics import CHAT_REQUEST_TOTAL
 from backend.services.chat import ChatService
 from backend.services.voice import infer_voice_profile
 
@@ -68,7 +70,23 @@ async def chat(
     _: None = Depends(require_api_key),
 ) -> ChatResponseDTO:
     log.info("chat.request", bot_name=req.bot_name, messages=len(req.messages))
-    result = await service.chat(req.to_domain())
+    try:
+        result = await service.chat(req.to_domain())
+    except httpx.HTTPStatusError as exc:
+        http_status = exc.response.status_code
+        if http_status == 429:
+            CHAT_REQUEST_TOTAL.labels(status="upstream_429").inc()
+            log.warning("chat.upstream_rate_limited")
+            raise HTTPException(status_code=429, detail="Upstream rate limited — please try again.")
+        CHAT_REQUEST_TOTAL.labels(status="upstream_error").inc()
+        log.warning("chat.upstream_error", status=http_status)
+        raise HTTPException(status_code=502, detail=f"Upstream API error {http_status}")
+    except Exception:
+        CHAT_REQUEST_TOTAL.labels(status="error").inc()
+        log.exception("chat.unexpected_error")
+        raise HTTPException(status_code=500, detail="Unexpected error")
+
+    CHAT_REQUEST_TOTAL.labels(status="success").inc()
     return ChatResponseDTO(
         content=result.content,
         model=req.model,

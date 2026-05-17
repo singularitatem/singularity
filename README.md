@@ -8,11 +8,11 @@
   </a>
 </p>
 
-A local AI chat studio. Talk to richly-configured AI characters over a streaming WebSocket connection — all running on your machine.
+A local AI chat studio. Talk to richly-configured AI characters over a simple request/response API — all running on your machine.
 
 ## Features
 
-- **Streaming chat** — responses stream word-by-word via WebSocket
+- **One-shot chat** — responses are returned in a single HTTP response
 - **Character system** — choose from built-in characters (Einstein, Bob, Luna) or create your own with a custom name, emoji, description, and system prompt
 - **Markdown rendering** — assistant responses render full GFM markdown: headers, lists, code blocks, tables, blockquotes
 - **Voice** — read any message aloud with one click; voice pitch and rate are tuned per character using the browser's Web Speech API
@@ -52,7 +52,6 @@ Set `PROVIDER=echo` to run fully offline with a dev echo backend (no API key nee
 ```
 backend/
   api/routes/chat.py         ← REST GET /api/v1/characters, POST /api/v1/chat
-                                  WebSocket /api/v1/chat/stream (JSON chunks)
   inference/
     interface.py             ← abstract InferenceBackend
     chai_backend.py          ← Chai API (default)
@@ -60,7 +59,7 @@ backend/
   services/chat.py           ← ChatService
   core/settings.py           ← pydantic-settings config + built-in character list
 frontend/src/
-  model/useChatModel.ts      ← WebSocket streaming, conversation state
+  model/useChatModel.ts      ← request/response chat, conversation state
   model/useCharacterStore.ts ← character CRUD (builtins from API + custom in localStorage)
   model/useSpeech.ts         ← Web Speech API with per-character voice profiles
   view/                      ← React view components (CSS modules, dark theme)

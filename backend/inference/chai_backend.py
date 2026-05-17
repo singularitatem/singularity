@@ -5,7 +5,7 @@ import httpx
 import structlog
 from tenacity import RetryCallState, retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
-from backend.core.metrics import PROVIDER_REQUEST_DURATION, PROVIDER_RETRY_TOTAL
+from backend.telemetry.metrics import PROVIDER_REQUEST_DURATION, PROVIDER_RETRY_TOTAL
 from backend.inference.interface import ChatRequest, InferenceBackend
 
 log = structlog.get_logger(__name__)

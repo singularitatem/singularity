@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import type { Character, ChatResponse, Conversation, Message } from "../types";
+import { ApiError, sendChat } from "../api";
+import type { Character, Conversation, Message } from "../types";
 
 const DEFAULT_MODEL = "default";
 const STORAGE_KEY = "singularity.conversations";
@@ -165,21 +166,15 @@ export function useChatModel({ characters }: Props) {
     const controller = new AbortController();
     abortRef.current = controller;
 
-    fetch("/api/v1/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      signal: controller.signal,
-      body: JSON.stringify({
-        messages: nextMessages.map(({ role, content }) => ({ role, content })),
+    sendChat(
+      nextMessages.map(({ role, content }) => ({ role, content })),
+      {
         model: DEFAULT_MODEL,
         bot_name: activeCharacter?.bot_name,
         system_prompt: activeCharacter?.systemPrompt ?? null,
-      }),
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error(`API error ${res.status}`);
-        return res.json() as Promise<ChatResponse>;
-      })
+        signal: controller.signal,
+      },
+    )
       .then((data) => {
         setConversations((prev) =>
           sortConversations(
@@ -192,9 +187,12 @@ export function useChatModel({ characters }: Props) {
         );
       })
       .catch((err: Error) => {
-        if (err.name !== "AbortError") {
-          setStreamError(err.message || "Request failed. Check that the Python backend is running.");
-        }
+        if (err.name === "AbortError") return;
+        const msg =
+          err instanceof ApiError && err.status === 429
+            ? "Rate limited — please wait a moment."
+            : err.message || "Request failed. Check that the Python backend is running.";
+        setStreamError(msg);
       })
       .finally(() => {
         abortRef.current = null;

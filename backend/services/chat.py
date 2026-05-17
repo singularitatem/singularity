@@ -1,10 +1,20 @@
 from dataclasses import dataclass, replace
 from typing import Optional
 
+import tiktoken
+
 from backend.catalog import BUILT_IN_CHARACTERS
 from backend.core.models import Character
 from backend.core.settings import Settings
 from backend.inference.interface import ChatRequest, InferenceBackend
+
+# cl100k_base is the GPT-3.5/4 tokenizer — a reasonable proxy for any
+# modern LLM when the provider does not expose real token counts.
+_enc = tiktoken.get_encoding("cl100k_base")
+
+
+def _count_tokens(text: str) -> int:
+    return len(_enc.encode(text))
 
 
 @dataclass
@@ -27,12 +37,15 @@ class ChatService:
         if not request.model:
             request = replace(request, model=self._default_model)
 
-        prompt_chars = sum(len(m.content) for m in request.messages)
+        prompt_tokens = sum(_count_tokens(m.content) for m in request.messages)
+        if request.system_prompt:
+            prompt_tokens += _count_tokens(request.system_prompt)
+
         content = await self._backend.chat(request)
 
         return ChatResult(
             content=content,
-            prompt_tokens=prompt_chars // 4,
-            completion_tokens=len(content) // 4,
+            prompt_tokens=prompt_tokens,
+            completion_tokens=_count_tokens(content),
             estimated=True,
         )

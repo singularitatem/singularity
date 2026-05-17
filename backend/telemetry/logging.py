@@ -12,10 +12,11 @@ def configure_logging(env: str = "development") -> None:
         structlog.processors.TimeStamper(fmt="iso"),
     ]
 
-    if env == "development":
-        renderer = structlog.dev.ConsoleRenderer()
-    else:
-        renderer = structlog.processors.JSONRenderer()
+    renderer = (
+        structlog.dev.ConsoleRenderer()
+        if env == "development"
+        else structlog.processors.JSONRenderer()
+    )
 
     structlog.configure(
         processors=[
@@ -42,6 +43,5 @@ def configure_logging(env: str = "development") -> None:
     root.handlers = [handler]
     root.setLevel(logging.INFO)
 
-    # Silence noisy third-party loggers
-    logging.getLogger("httpx").setLevel(logging.WARNING)
-    logging.getLogger("httpcore").setLevel(logging.WARNING)
+    for name in ("httpx", "httpcore"):
+        logging.getLogger(name).setLevel(logging.WARNING)

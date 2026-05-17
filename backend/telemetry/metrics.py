@@ -13,3 +13,14 @@ PROVIDER_RETRY_TOTAL = Counter(
     ["provider"],
 )
 
+CHAT_REQUEST_TOTAL = Counter(
+    "singularity_chat_request_total",
+    "Chat requests by outcome",
+    ["status"],  # success | upstream_429 | upstream_error | error
+)
+
+AUTH_FAILURE_TOTAL = Counter(
+    "singularity_auth_failure_total",
+    "Authentication failures",
+    ["reason"],  # missing_key | invalid_key
+)

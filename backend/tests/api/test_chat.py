@@ -36,6 +36,14 @@ def test_chat_missing_messages_rejected(client):
     assert response.status_code == 422
 
 
+def test_chat_empty_messages_ok(client):
+    response = client.post(
+        "/api/v1/chat",
+        json={"messages": [], "model": "default"},
+    )
+    assert response.status_code == 200
+
+
 def test_list_characters(client):
     response = client.get("/api/v1/characters")
     assert response.status_code == 200

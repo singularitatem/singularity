@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { fetchCharacters } from "../api";
 import type { Character } from "../types";
 
 const CUSTOM_KEY = "singularity.custom_characters";
@@ -51,22 +52,9 @@ export function useCharacterStore() {
 
   // Fetch builtins from backend; fallback stays in place if this fails
   useEffect(() => {
-    fetch("/api/v1/characters")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data: unknown) => {
-        if (Array.isArray(data) && data.length > 0) {
-          setBuiltins(
-            (data as Array<{ id: string; name: string; bot_name: string; description: string; emoji: string; system_prompt?: string }>).map((c) => ({
-              id: c.id,
-              name: c.name,
-              bot_name: c.bot_name,
-              description: c.description,
-              emoji: c.emoji,
-              systemPrompt: c.system_prompt ?? undefined,
-              isCustom: false,
-            })),
-          );
-        }
+    fetchCharacters()
+      .then((data) => {
+        if (data.length > 0) setBuiltins(data.map((c) => ({ ...c, isCustom: false })));
       })
       .catch(() => {});
   }, []);

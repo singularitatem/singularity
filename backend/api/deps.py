@@ -1,7 +1,11 @@
+import structlog
 from fastapi import Depends, HTTPException, Request, Security, status
 from fastapi.security import APIKeyHeader
 
 from backend.services.chat import ChatService
+from backend.telemetry.metrics import AUTH_FAILURE_TOTAL
+
+log = structlog.get_logger(__name__)
 
 _api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 
@@ -21,7 +25,17 @@ def require_api_key(
     valid_keys: list[str] = request.app.state.settings.api_keys
     if not valid_keys:
         return
-    if not key or key not in valid_keys:
+    if not key:
+        AUTH_FAILURE_TOTAL.labels(reason="missing_key").inc()
+        log.warning("auth.missing_key", path=request.url.path)
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or missing API key",
+            headers={"WWW-Authenticate": "ApiKey"},
+        )
+    if key not in valid_keys:
+        AUTH_FAILURE_TOTAL.labels(reason="invalid_key").inc()
+        log.warning("auth.invalid_key", path=request.url.path)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or missing API key",
