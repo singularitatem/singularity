@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { Character, Conversation, Message, StreamChunk } from "../types";
+import type { Character, ChatResponse, Conversation, Message } from "../types";
 
 const DEFAULT_MODEL = "default";
 const STORAGE_KEY = "singularity.conversations";
@@ -50,11 +50,6 @@ function loadRecentCharacterIds(activeId: string): string[] {
   }
 }
 
-function buildWebSocketUrl() {
-  const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-  return `${protocol}//${window.location.host}/api/v1/chat/stream`;
-}
-
 function titleFromMessages(messages: Message[]) {
   const first = messages.find((m) => m.role === "user");
   if (!first?.content.trim()) return "New conversation";
@@ -88,7 +83,7 @@ export function useChatModel({ characters }: Props) {
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
   const [streamError, setStreamError] = useState<string | null>(null);
-  const wsRef = useRef<WebSocket | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(conversations));
@@ -108,7 +103,7 @@ export function useChatModel({ characters }: Props) {
     }
   }, [activeConversationId, conversations]);
 
-  useEffect(() => () => { wsRef.current?.close(); }, []);
+  useEffect(() => () => { abortRef.current?.abort(); }, []);
 
   const activeConversation =
     conversations.find((c) => c.id === activeConversationId) ?? conversations[0];
@@ -167,41 +162,44 @@ export function useChatModel({ characters }: Props) {
     setStreaming(true);
     setStreamError(null);
 
-    const ws = new WebSocket(buildWebSocketUrl());
-    wsRef.current = ws;
+    const controller = new AbortController();
+    abortRef.current = controller;
 
-    ws.onopen = () => {
-      ws.send(JSON.stringify({
+    fetch("/api/v1/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      signal: controller.signal,
+      body: JSON.stringify({
         messages: nextMessages.map(({ role, content }) => ({ role, content })),
         model: DEFAULT_MODEL,
         bot_name: activeCharacter?.bot_name,
         system_prompt: activeCharacter?.systemPrompt ?? null,
-      }));
-    };
-
-    ws.onmessage = (event) => {
-      const chunk: StreamChunk = JSON.parse(event.data);
-      if (chunk.error) {
-        setStreamError(chunk.error);
-        ws.close();
+      }),
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error(`API error ${res.status}`);
+        return res.json() as Promise<ChatResponse>;
+      })
+      .then((data) => {
+        setConversations((prev) =>
+          sortConversations(
+            updateConversation(prev, activeConversation.id, (c) => {
+              const msgs = [...c.messages];
+              msgs[msgs.length - 1] = { ...msgs[msgs.length - 1], content: data.content };
+              return { ...c, updatedAt: nowIso(), messages: msgs };
+            }),
+          ),
+        );
+      })
+      .catch((err: Error) => {
+        if (err.name !== "AbortError") {
+          setStreamError(err.message || "Request failed. Check that the Python backend is running.");
+        }
+      })
+      .finally(() => {
+        abortRef.current = null;
         setStreaming(false);
-        return;
-      }
-      if (chunk.done) { ws.close(); setStreaming(false); return; }
-      setConversations((prev) =>
-        sortConversations(
-          updateConversation(prev, activeConversation.id, (c) => {
-            const msgs = [...c.messages];
-            const last = msgs[msgs.length - 1];
-            msgs[msgs.length - 1] = { ...last, content: last.content + chunk.delta };
-            return { ...c, updatedAt: nowIso(), messages: msgs };
-          }),
-        ),
-      );
-    };
-
-    ws.onerror = () => { setStreamError("Connection problem. Check that the Python backend is running."); setStreaming(false); };
-    ws.onclose = () => { wsRef.current = null; setStreaming(false); };
+      });
   };
 
   return {

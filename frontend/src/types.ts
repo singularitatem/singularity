@@ -47,8 +47,3 @@ export interface ChatResponse {
   model: string;
 }
 
-export interface StreamChunk {
-  delta: string;
-  done: boolean;
-  error?: string;
-}

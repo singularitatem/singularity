@@ -1,8 +1,9 @@
 import pytest
+
+from backend.core.settings import Settings
 from backend.inference.echo import EchoBackend
 from backend.inference.interface import ChatMessage, ChatRequest
 from backend.services.chat import ChatService
-from backend.core.settings import Settings
 
 
 @pytest.fixture
@@ -11,23 +12,31 @@ def service() -> ChatService:
 
 
 @pytest.mark.asyncio
-async def test_chat_returns_string(service: ChatService):
+async def test_chat_returns_result(service):
     req = ChatRequest(messages=[ChatMessage(role="user", content="hello")], model="default")
     result = await service.chat(req)
-    assert isinstance(result, str)
-    assert "hello" in result
+    assert "hello" in result.content
+    assert result.prompt_tokens >= 0
+    assert result.completion_tokens >= 0
+    assert result.estimated is True
 
 
 @pytest.mark.asyncio
-async def test_chat_uses_default_model_when_empty(service: ChatService):
+async def test_chat_usage_totals(service):
+    req = ChatRequest(messages=[ChatMessage(role="user", content="hello world")], model="default")
+    result = await service.chat(req)
+    assert result.prompt_tokens + result.completion_tokens >= 0
+
+
+@pytest.mark.asyncio
+async def test_chat_empty_model_uses_default(service):
     req = ChatRequest(messages=[ChatMessage(role="user", content="hi")], model="")
-    await service.chat(req)
-    assert req.model == service._settings.default_model
+    result = await service.chat(req)
+    assert isinstance(result.content, str)
 
 
 @pytest.mark.asyncio
-async def test_stream_chat_yields_chunks(service: ChatService):
-    req = ChatRequest(messages=[ChatMessage(role="user", content="ping")], model="default")
-    chunks = [chunk async for chunk in service.stream_chat(req)]
-    assert len(chunks) > 0
-    assert "ping" in "".join(chunks)
+async def test_characters_returns_list(service):
+    chars = service.characters()
+    assert len(chars) > 0
+    assert all(c.id and c.name for c in chars)

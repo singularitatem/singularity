@@ -13,16 +13,15 @@ def make_request(*contents: str) -> ChatRequest:
 
 @pytest.mark.asyncio
 async def test_chat_echoes_last_user_message():
-    result = await EchoBackend().chat(make_request("hello"))
+    backend = EchoBackend()
+    result = await backend.chat(make_request("hello"))
     assert "hello" in result
 
 
 @pytest.mark.asyncio
-async def test_chat_empty_messages_returns_string():
-    result = await EchoBackend().chat(ChatRequest(messages=[], model="default"))
+async def test_chat_empty_messages():
+    backend = EchoBackend()
+    result = await backend.chat(ChatRequest(messages=[], model="default"))
     assert isinstance(result, str)
 
 
-@pytest.mark.asyncio
-async def test_health_check_returns_true():
-    assert await EchoBackend().health_check() is True

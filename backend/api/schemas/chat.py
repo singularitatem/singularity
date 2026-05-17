@@ -1,10 +1,13 @@
-from typing import Optional
+from typing import Literal, Optional
+
 from pydantic import BaseModel
+
+from backend.core.models import Character, VoiceProfile
 from backend.inference.interface import ChatMessage, ChatRequest
 
 
 class MessageDTO(BaseModel):
-    role: str
+    role: Literal["user", "assistant", "system"]
     content: str
 
 
@@ -25,19 +28,23 @@ class ChatRequestDTO(BaseModel):
         )
 
 
+class Usage(BaseModel):
+    prompt_tokens: int
+    completion_tokens: int
+    total_tokens: int
+    estimated: bool  # True when token counts are approximated, not reported by the provider
+
+
 class ChatResponseDTO(BaseModel):
     role: str = "assistant"
     content: str
     model: str
+    usage: Usage
 
 
-class CharacterDTO(BaseModel):
-    id: str
-    name: str
-    bot_name: str
-    description: str
-    emoji: str
-    system_prompt: Optional[str] = None
+# Re-export domain models as API types; fields are identical so no mapping needed.
+CharacterDTO = Character
+VoiceInferenceResponse = VoiceProfile
 
 
 class VoiceInferenceRequest(BaseModel):
@@ -45,10 +52,3 @@ class VoiceInferenceRequest(BaseModel):
     bot_name: Optional[str] = None
     description: str
     system_prompt: Optional[str] = None
-
-
-class VoiceInferenceResponse(BaseModel):
-    pitch: float
-    rate: float
-    gender: str  # "male" | "female" | "neutral"
-    accent: str  # "american" | "british" | "australian" | "irish" | "scottish" | "neutral"

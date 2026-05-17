@@ -1,5 +1,4 @@
-from typing import AsyncIterator
-from backend.inference.interface import InferenceBackend, ChatRequest
+from backend.inference.interface import ChatRequest, InferenceBackend
 
 
 class EchoBackend(InferenceBackend):
@@ -8,8 +7,3 @@ class EchoBackend(InferenceBackend):
     async def chat(self, request: ChatRequest) -> str:
         last = next((m for m in reversed(request.messages) if m.role == "user"), None)
         return f"[echo] {last.content if last else ''}"
-
-    async def stream_chat(self, request: ChatRequest) -> AsyncIterator[str]:
-        response = await self.chat(request)
-        for word in response.split():
-            yield word + " "
