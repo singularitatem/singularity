@@ -7,7 +7,7 @@ interface Props {
   activeCharacterId: string;
   onClose: () => void;
   onSelect: (characterId: string) => void;
-  onOpenDetail: (character: Character) => void;
+  onOpenDetail: (character: Character | null) => void;
 }
 
 export function CharacterModal({
@@ -63,7 +63,7 @@ export function CharacterModal({
             placeholder="Search by name or description…"
             type="search"
           />
-          <button className={styles.createButton} onClick={() => onOpenDetail(null as unknown as Character)} type="button">
+          <button className={styles.createButton} onClick={() => onOpenDetail(null)} type="button">
             + New character
           </button>
         </div>

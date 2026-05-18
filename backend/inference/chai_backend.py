@@ -33,6 +33,8 @@ class ChaiBackend(InferenceBackend):
         )
 
     def _build_chat_history(self, request: ChatRequest) -> list[dict]:
+        # The Chai API has no dedicated system-prompt field; the convention is to
+        # inject it as the first bot message so the model treats it as prior context.
         user_name = request.user_name or self._default_user_name
         bot_name = request.bot_name or _DEFAULT_BOT_NAME
         history: list[dict] = []
