@@ -17,6 +17,11 @@ class Settings(BaseSettings):
     chat_rate_limit: str = "30/minute"
     default_rate_limit: str = "60/minute"
 
+    # Trusted reverse-proxy IPs — X-Forwarded-For / X-Real-IP are only
+    # honoured when the direct connecting IP is in this list.
+    # Empty (default) means all rate-limit keys use the direct connection IP.
+    trusted_proxies: list[str] = []
+
     # Chai
     chai_api_key: str = ""
     chai_user_name: str = "User"

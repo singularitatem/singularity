@@ -17,9 +17,9 @@ def test_gender_detection(text, expected):
 @pytest.mark.parametrize("text,expected_pitch", [
     ("My voice is high-pitched and bright", 1.25),
     ("I speak in a deep, gravelly baritone", 0.75),
-    ("She has a warm voice", 1.1),    # female default
-    ("He has a calm voice", 0.9),     # male default
-    ("Neutral monotone output", 1.0), # neutral default
+    ("She has a warm voice", 1.1),
+    ("He has a calm voice", 0.9),
+    ("Neutral monotone output", 1.0),
 ])
 def test_pitch_detection(text, expected_pitch):
     assert _parse_voice(text).pitch == expected_pitch

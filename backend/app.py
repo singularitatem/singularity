@@ -11,6 +11,7 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
 from backend.api.deps import get_real_ip
+import backend.api.routes.chat as _chat_route
 from backend.api.routes.chat import router as chat_router
 from backend.api.routes.health import router as health_router
 from backend.telemetry.logging import configure_logging
@@ -26,6 +27,7 @@ def create_app(settings: Optional[Settings] = None) -> FastAPI:
         settings = Settings()
 
     configure_logging(settings.env)
+    _chat_route._CHAT_RATE_LIMIT = settings.chat_rate_limit
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):

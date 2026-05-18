@@ -188,6 +188,15 @@ export function useChatModel({ characters }: Props) {
       })
       .catch((err: Error) => {
         if (err.name === "AbortError") return;
+        // Remove the empty assistant placeholder so the conversation stays clean.
+        setConversations((prev) =>
+          sortConversations(
+            updateConversation(prev, activeConversation.id, (c) => ({
+              ...c,
+              messages: c.messages.filter((m) => m.id !== assistantMsg.id),
+            })),
+          ),
+        );
         const msg =
           err instanceof ApiError && err.status === 429
             ? "Rate limited — please wait a moment."

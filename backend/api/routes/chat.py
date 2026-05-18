@@ -21,6 +21,10 @@ log = structlog.get_logger(__name__)
 router = APIRouter()
 limiter = Limiter(key_func=get_real_ip)
 
+# Set by create_app() from Settings.chat_rate_limit so operators can tune via env.
+# A lambda lets tests override this at runtime without restarting the process.
+_CHAT_RATE_LIMIT = "30/minute"
+
 
 @router.get("/characters", response_model=list[CharacterDTO])
 async def list_characters(
@@ -62,7 +66,7 @@ async def infer_voice(
 
 
 @router.post("/chat", response_model=ChatResponseDTO)
-@limiter.limit("30/minute")
+@limiter.limit(lambda: _CHAT_RATE_LIMIT)
 async def chat(
     request: Request,
     req: ChatRequestDTO,

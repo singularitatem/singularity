@@ -1,6 +1,9 @@
 import type { Character, ChatResponse, Message } from "./types";
 
 const BASE = "/api/v1";
+// Set VITE_API_KEY in .env when the backend is configured with api_keys.
+// Leave unset for open/dev mode.
+const API_KEY = import.meta.env.VITE_API_KEY ?? "";
 
 export class ApiError extends Error {
   constructor(
@@ -13,9 +16,11 @@ export class ApiError extends Error {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (API_KEY) headers["X-API-Key"] = API_KEY;
   const res = await fetch(`${BASE}${path}`, {
-    headers: { "Content-Type": "application/json", ...init?.headers },
     ...init,
+    headers: { ...headers, ...init?.headers },
   });
   if (!res.ok) {
     const detail = await res.json().catch(() => ({ detail: res.statusText }));

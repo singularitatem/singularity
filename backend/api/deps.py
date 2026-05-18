@@ -45,13 +45,20 @@ def require_api_key(
 
 def get_real_ip(request: Request) -> str:
     """
-    Resolve the originating client IP, respecting common proxy headers.
-    Falls back to the direct connection address.
+    Resolve the originating client IP.
+    Forwarded headers are only trusted when the direct connecting IP is in
+    Settings.trusted_proxies — otherwise any client could spoof their address.
     """
+    connecting_ip = request.client.host if request.client else "unknown"
+    trusted: list[str] = []
+    if hasattr(request.app.state, "settings"):
+        trusted = request.app.state.settings.trusted_proxies
+    if connecting_ip not in trusted:
+        return connecting_ip
     forwarded_for = request.headers.get("X-Forwarded-For")
     if forwarded_for:
         return forwarded_for.split(",")[0].strip()
     real_ip = request.headers.get("X-Real-IP")
     if real_ip:
         return real_ip.strip()
-    return request.client.host if request.client else "unknown"
+    return connecting_ip

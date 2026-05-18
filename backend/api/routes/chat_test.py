@@ -99,5 +99,3 @@ def test_characters_blocked_without_key(authed_client):
 def test_characters_passes_with_valid_key(authed_client):
     response = authed_client.get("/api/v1/characters", headers={"X-API-Key": "test-key-2"})
     assert response.status_code == 200
-
-

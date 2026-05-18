@@ -2,3 +2,4 @@
 asyncio_mode = "auto"
 testpaths = ["backend"]
 pythonpath = ["."]
+python_files = "*_test.py"
