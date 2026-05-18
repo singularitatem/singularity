@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional
 
 
@@ -18,9 +18,18 @@ class ChatRequest:
     system_prompt: Optional[str] = None
 
 
+@dataclass
+class InferenceResult:
+    content: str
+    # When the provider reports real token counts, set these and estimated=False.
+    # When None, ChatService falls back to tiktoken estimation.
+    prompt_tokens: Optional[int] = None
+    completion_tokens: Optional[int] = None
+
+
 class InferenceBackend(ABC):
     @abstractmethod
-    async def chat(self, request: ChatRequest) -> str: ...
+    async def chat(self, request: ChatRequest) -> InferenceResult: ...
 
     async def health_check(self) -> bool:
         return True

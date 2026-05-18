@@ -7,12 +7,17 @@ from backend.core.settings import Settings
 
 @pytest.fixture
 def settings() -> Settings:
-    return Settings(provider="echo", default_model="test-model")
+    return Settings(provider="echo", default_model="test-model", db_url="sqlite+aiosqlite:///:memory:")
 
 
 @pytest.fixture
 def settings_with_auth() -> Settings:
-    return Settings(provider="echo", default_model="test-model", api_keys=["test-key-1", "test-key-2"])
+    return Settings(
+        provider="echo",
+        default_model="test-model",
+        api_keys=["test-key-1", "test-key-2"],
+        db_url="sqlite+aiosqlite:///:memory:",
+    )
 
 
 @pytest.fixture

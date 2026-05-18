@@ -7,11 +7,19 @@ export interface VoiceProfile {
   accent?: string;
 }
 
+export interface TokenUsage {
+  prompt_tokens: number;
+  completion_tokens: number;
+  total_tokens: number;
+  estimated: boolean;
+}
+
 export interface Message {
   id: string;
   role: Role;
   content: string;
   createdAt: string;
+  usage?: TokenUsage;
 }
 
 export interface Character {
@@ -53,5 +61,6 @@ export interface ChatResponse {
   role: Role;
   content: string;
   model: string;
+  usage: TokenUsage;
 }
 

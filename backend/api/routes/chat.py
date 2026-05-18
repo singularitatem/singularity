@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from slowapi import Limiter
 from starlette.requests import Request
 
-from backend.api.deps import get_chat_service, get_real_ip, require_api_key
+from backend.api.deps import get_chat_service, get_conversation_service, get_real_ip, require_api_key
 from backend.api.schemas.chat import (
     CharacterDTO,
     ChatRequestDTO,
@@ -13,8 +13,14 @@ from backend.api.schemas.chat import (
     VoiceInferenceRequest,
     VoiceInferenceResponse,
 )
-from backend.telemetry.metrics import CHAT_REQUEST_TOTAL
+from backend.telemetry.metrics import (
+    CHAT_REQUEST_TOTAL,
+    ESTIMATED_COST_USD_TOTAL,
+    TOKENS_COMPLETION_TOTAL,
+    TOKENS_PROMPT_TOTAL,
+)
 from backend.services.chat import ChatService
+from backend.services.conversation import ConversationService
 from backend.services.voice import infer_voice_profile
 
 log = structlog.get_logger(__name__)
@@ -24,6 +30,8 @@ limiter = Limiter(key_func=get_real_ip)
 # Set by create_app() from Settings.chat_rate_limit so operators can tune via env.
 # A lambda lets tests override this at runtime without restarting the process.
 _CHAT_RATE_LIMIT = "30/minute"
+
+_COST_PER_1K_TOKENS = 0.001  # order-of-magnitude proxy, not provider-accurate
 
 
 @router.get("/characters", response_model=list[CharacterDTO])
@@ -71,35 +79,62 @@ async def chat(
     request: Request,
     req: ChatRequestDTO,
     service: ChatService = Depends(get_chat_service),
+    conv_service: ConversationService = Depends(get_conversation_service),
     _: None = Depends(require_api_key),
 ) -> ChatResponseDTO:
+    provider = request.app.state.settings.provider
+    model = req.model
+    character = req.bot_name or "unknown"
+
     log.info("chat.request", bot_name=req.bot_name, messages=len(req.messages))
     try:
         result = await service.chat(req.to_domain())
     except httpx.HTTPStatusError as exc:
         http_status = exc.response.status_code
         if http_status == 429:
-            CHAT_REQUEST_TOTAL.labels(status="upstream_429").inc()
+            CHAT_REQUEST_TOTAL.labels(status="upstream_429", model=model, character=character).inc()
             log.warning("chat.upstream_rate_limited")
             raise HTTPException(status_code=429, detail="Upstream rate limited — please try again.")
-        CHAT_REQUEST_TOTAL.labels(status="upstream_error").inc()
+        CHAT_REQUEST_TOTAL.labels(status="upstream_error", model=model, character=character).inc()
         log.warning("chat.upstream_error", status=http_status)
         raise HTTPException(status_code=502, detail=f"Upstream API error {http_status}")
     except Exception:
-        CHAT_REQUEST_TOTAL.labels(status="error").inc()
+        CHAT_REQUEST_TOTAL.labels(status="error", model=model, character=character).inc()
         log.exception("chat.unexpected_error")
         raise HTTPException(status_code=500, detail="Unexpected error")
 
-    CHAT_REQUEST_TOTAL.labels(status="success").inc()
+    CHAT_REQUEST_TOTAL.labels(status="success", model=model, character=character).inc()
+    TOKENS_PROMPT_TOTAL.labels(provider=provider, model=model, character=character).inc(
+        result.prompt_tokens
+    )
+    TOKENS_COMPLETION_TOTAL.labels(provider=provider, model=model, character=character).inc(
+        result.completion_tokens
+    )
+    total_tokens = result.prompt_tokens + result.completion_tokens
+    ESTIMATED_COST_USD_TOTAL.labels(provider=provider, model=model, character=character).inc(
+        total_tokens / 1000 * _COST_PER_1K_TOKENS
+    )
+
+    if req.conversation_id:
+        user_msg = next((m for m in reversed(req.messages) if m.role == "user"), None)
+        user_content = user_msg.content if user_msg else ""
+        try:
+            await conv_service.append_turn(
+                conv_id=req.conversation_id,
+                character_id=req.character_id or "",
+                user_content=user_content,
+                assistant_content=result.content,
+            )
+        except Exception:
+            log.warning("chat.persist_failed", conversation_id=req.conversation_id)
+
     return ChatResponseDTO(
         content=result.content,
-        model=req.model,
+        model=result.model or req.model,
         usage=Usage(
             prompt_tokens=result.prompt_tokens,
             completion_tokens=result.completion_tokens,
-            total_tokens=result.prompt_tokens + result.completion_tokens,
+            total_tokens=total_tokens,
             estimated=result.estimated,
         ),
     )
-
-

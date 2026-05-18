@@ -9,6 +9,8 @@ structlog>=25.0.0
 tenacity>=9.0.0
 slowapi>=0.1.9
 prometheus-fastapi-instrumentator>=7.0.0
+sqlalchemy>=2.0.0
+aiosqlite>=0.20.0
 
 # testing
 pytest>=8.3.0

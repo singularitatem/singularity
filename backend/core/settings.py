@@ -22,6 +22,9 @@ class Settings(BaseSettings):
     # Empty (default) means all rate-limit keys use the direct connection IP.
     trusted_proxies: list[str] = []
 
+    # Database
+    db_url: str = "sqlite+aiosqlite:///./singularity.db"
+
     # Chai
     chai_api_key: str = ""
     chai_user_name: str = "User"

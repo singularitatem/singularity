@@ -23,6 +23,7 @@ class ChatResult:
     prompt_tokens: int
     completion_tokens: int
     estimated: bool
+    model: str = ""
 
 
 class ChatService:
@@ -37,18 +38,27 @@ class ChatService:
 
     async def chat(self, request: ChatRequest) -> ChatResult:
         if not request.model:
-            # replace() returns a new instance rather than mutating the caller's object.
             request = replace(request, model=self._default_model)
 
-        prompt_tokens = sum(_count_tokens(m.content) for m in request.messages)
-        if request.system_prompt:
-            prompt_tokens += _count_tokens(request.system_prompt)
+        result = await self._backend.chat(request)
 
-        content = await self._backend.chat(request)
+        if result.prompt_tokens is not None and result.completion_tokens is not None:
+            # Provider reported real counts — use them as-is.
+            prompt_tokens = result.prompt_tokens
+            completion_tokens = result.completion_tokens
+            estimated = False
+        else:
+            # Fall back to local tiktoken estimation.
+            prompt_tokens = sum(_count_tokens(m.content) for m in request.messages)
+            if request.system_prompt:
+                prompt_tokens += _count_tokens(request.system_prompt)
+            completion_tokens = _count_tokens(result.content)
+            estimated = True
 
         return ChatResult(
-            content=content,
+            content=result.content,
             prompt_tokens=prompt_tokens,
-            completion_tokens=_count_tokens(content),
-            estimated=True,
+            completion_tokens=completion_tokens,
+            estimated=estimated,
+            model=request.model or self._default_model,
         )

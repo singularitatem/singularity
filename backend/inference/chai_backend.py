@@ -6,7 +6,7 @@ import structlog
 from tenacity import RetryCallState, retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
 from backend.telemetry.metrics import PROVIDER_REQUEST_DURATION, PROVIDER_RETRY_TOTAL
-from backend.inference.interface import ChatRequest, InferenceBackend
+from backend.inference.interface import ChatRequest, InferenceBackend, InferenceResult
 
 log = structlog.get_logger(__name__)
 
@@ -21,6 +21,23 @@ _RETRYABLE = retry_if_exception_type((httpx.TimeoutException, httpx.ConnectError
 
 def _count_retry(retry_state: RetryCallState) -> None:
     PROVIDER_RETRY_TOTAL.labels(provider=_PROVIDER).inc()
+
+
+def _extract_tokens(data: dict) -> tuple[Optional[int], Optional[int]]:
+    """Try to extract provider-reported token counts from the response payload."""
+    usage = data.get("usage") or data.get("token_counts") or {}
+    prompt = (
+        usage.get("prompt_tokens")
+        or usage.get("input_tokens")
+        or usage.get("prompt")
+    )
+    completion = (
+        usage.get("completion_tokens")
+        or usage.get("output_tokens")
+        or usage.get("completion")
+    )
+    return (int(prompt) if prompt is not None else None,
+            int(completion) if completion is not None else None)
 
 
 class ChaiBackend(InferenceBackend):
@@ -52,7 +69,7 @@ class ChaiBackend(InferenceBackend):
         after=_count_retry,
         reraise=True,
     )
-    async def chat(self, request: ChatRequest) -> str:
+    async def chat(self, request: ChatRequest) -> InferenceResult:
         bot_name = request.bot_name or _DEFAULT_BOT_NAME
         user_name = request.user_name or self._default_user_name
         log.debug("chai.request", bot_name=bot_name, messages=len(request.messages))
@@ -78,8 +95,13 @@ class ChaiBackend(InferenceBackend):
         if not content:
             raise ValueError(f"Unexpected Chai API response shape: {list(data.keys())}")
 
-        log.debug("chai.response", chars=len(content))
-        return content
+        prompt_tokens, completion_tokens = _extract_tokens(data)
+        log.debug("chai.response", chars=len(content), estimated=prompt_tokens is None)
+        return InferenceResult(
+            content=content,
+            prompt_tokens=prompt_tokens,
+            completion_tokens=completion_tokens,
+        )
 
     async def health_check(self) -> bool:
         try:

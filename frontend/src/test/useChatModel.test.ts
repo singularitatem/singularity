@@ -22,7 +22,12 @@ const BOB: Character = {
 
 beforeEach(() => {
   localStorage.clear();
-  vi.spyOn(api, "sendChat").mockResolvedValue({ role: "assistant", content: "pong", model: "default" });
+  vi.spyOn(api, "sendChat").mockResolvedValue({
+    role: "assistant",
+    content: "pong",
+    model: "default",
+    usage: { prompt_tokens: 5, completion_tokens: 3, total_tokens: 8, estimated: true },
+  });
 });
 
 afterEach(() => {

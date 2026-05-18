@@ -21,7 +21,9 @@ def make_request(content: str = "hello", bot_name: str = "Einstein") -> ChatRequ
 async def test_chat_returns_model_output():
     respx.post(_API_URL).mock(return_value=httpx.Response(200, json={"model_output": "Hello!"}))
     backend = ChaiBackend(api_key="test-key")
-    assert await backend.chat(make_request()) == "Hello!"
+    result = await backend.chat(make_request())
+    assert result.content == "Hello!"
+    assert result.prompt_tokens is None  # Chai did not include usage
     await backend.aclose()
 
 
@@ -30,7 +32,20 @@ async def test_chat_returns_model_output():
 async def test_chat_falls_back_to_response_key():
     respx.post(_API_URL).mock(return_value=httpx.Response(200, json={"response": "Hi!"}))
     backend = ChaiBackend(api_key="test-key")
-    assert await backend.chat(make_request()) == "Hi!"
+    result = await backend.chat(make_request())
+    assert result.content == "Hi!"
+    await backend.aclose()
+
+
+@respx.mock
+@pytest.mark.asyncio
+async def test_chat_uses_provider_token_counts_when_present():
+    payload = {"model_output": "Hello!", "usage": {"prompt_tokens": 10, "completion_tokens": 5}}
+    respx.post(_API_URL).mock(return_value=httpx.Response(200, json=payload))
+    backend = ChaiBackend(api_key="test-key")
+    result = await backend.chat(make_request())
+    assert result.prompt_tokens == 10
+    assert result.completion_tokens == 5
     await backend.aclose()
 
 

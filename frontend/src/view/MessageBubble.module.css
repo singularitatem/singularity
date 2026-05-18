@@ -117,6 +117,19 @@
   }
 }
 
+/* ── Token count ── */
+.tokenCount {
+  margin-top: 6px;
+  padding: 0 6px;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+.tokenEstimated {
+  opacity: 0.6;
+}
+
 /* ── Markdown rendering ── */
 .markdown {
   min-width: 0;

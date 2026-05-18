@@ -12,8 +12,10 @@ from fastapi.testclient import TestClient
 
 from backend.app import create_app
 from backend.core.settings import Settings
+from backend.db.session import build_engine, build_session_factory, init_db
 from backend.inference.echo import EchoBackend
 from backend.services.chat import ChatService
+from backend.services.conversation import ConversationService
 
 _CHAT_PAYLOAD = lambda i: {  # noqa: E731
     "messages": [{"role": "user", "content": f"ping {i}"}],
@@ -34,7 +36,7 @@ def reset_rate_limiter():
     yield
 
 @pytest.fixture
-def async_app(settings):
+async def async_app(settings):
     """
     FastAPI app wired for async httpx tests.
     ASGITransport does not run the ASGI lifespan, so we pre-populate app.state
@@ -44,7 +46,13 @@ def async_app(settings):
     echo = EchoBackend()
     app.state.chat_service = ChatService(backend=echo, settings=settings)
     app.state.settings = settings
-    return app
+
+    engine = build_engine(settings.db_url)
+    await init_db(engine)
+    session_factory = build_session_factory(engine)
+    app.state.conversation_service = ConversationService(session_factory)
+    yield app
+    await engine.dispose()
 
 
 @pytest.fixture

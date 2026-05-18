@@ -2,7 +2,7 @@ import pytest
 
 from backend.core.settings import Settings
 from backend.inference.echo import EchoBackend
-from backend.inference.interface import ChatMessage, ChatRequest
+from backend.inference.interface import ChatMessage, ChatRequest, InferenceResult
 from backend.services.chat import ChatService
 
 
@@ -18,7 +18,7 @@ async def test_chat_returns_result(service):
     assert "hello" in result.content
     assert result.prompt_tokens >= 0
     assert result.completion_tokens >= 0
-    assert result.estimated is True
+    assert result.estimated is True  # EchoBackend never returns provider counts
 
 
 @pytest.mark.asyncio
@@ -33,6 +33,21 @@ async def test_chat_empty_model_uses_default(service):
     req = ChatRequest(messages=[ChatMessage(role="user", content="hi")], model="")
     result = await service.chat(req)
     assert isinstance(result.content, str)
+
+
+@pytest.mark.asyncio
+async def test_provider_reported_tokens_not_estimated():
+    class ProviderBackend(EchoBackend):
+        async def chat(self, request):
+            r = await super().chat(request)
+            return InferenceResult(content=r.content, prompt_tokens=20, completion_tokens=8)
+
+    svc = ChatService(backend=ProviderBackend(), settings=Settings())
+    req = ChatRequest(messages=[ChatMessage(role="user", content="hi")], model="default")
+    result = await svc.chat(req)
+    assert result.estimated is False
+    assert result.prompt_tokens == 20
+    assert result.completion_tokens == 8
 
 
 @pytest.mark.asyncio

@@ -17,6 +17,9 @@ class ChatRequestDTO(BaseModel):
     bot_name: Optional[str] = None
     user_name: Optional[str] = None
     system_prompt: Optional[str] = None
+    # Persistence fields — optional, for clients that want server-side conversation storage.
+    conversation_id: Optional[str] = None
+    character_id: Optional[str] = None
 
     def to_domain(self) -> ChatRequest:
         return ChatRequest(

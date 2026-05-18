@@ -13,11 +13,14 @@ from slowapi.errors import RateLimitExceeded
 from backend.api.deps import get_real_ip
 import backend.api.routes.chat as _chat_route
 from backend.api.routes.chat import router as chat_router
+from backend.api.routes.conversations import router as conversations_router
 from backend.api.routes.health import router as health_router
+from backend.db.session import build_engine, build_session_factory, init_db
 from backend.telemetry.logging import configure_logging
 from backend.core.settings import Settings
 from backend.inference.factory import build_inference_backend
 from backend.services.chat import ChatService
+from backend.services.conversation import ConversationService
 
 log = structlog.get_logger(__name__)
 
@@ -32,8 +35,6 @@ def create_app(settings: Optional[Settings] = None) -> FastAPI:
         settings = Settings()
 
     configure_logging(settings.env)
-    # Push the rate limit string into the chat router module so the @limiter.limit
-    # decorator reads it lazily (at request time) rather than at import time.
     _chat_route._CHAT_RATE_LIMIT = settings.chat_rate_limit
 
     @asynccontextmanager
@@ -42,9 +43,16 @@ def create_app(settings: Optional[Settings] = None) -> FastAPI:
         app.state.chat_service = ChatService(backend=backend, settings=settings)
         app.state.backend = backend
         app.state.settings = settings
+
+        engine = build_engine(settings.db_url)
+        await init_db(engine)
+        session_factory = build_session_factory(engine)
+        app.state.conversation_service = ConversationService(session_factory)
+
         log.info("app.started", provider=settings.provider, env=settings.env)
         yield
         await backend.aclose()
+        await engine.dispose()
         log.info("app.stopped")
 
     limiter = Limiter(key_func=get_real_ip, default_limits=[settings.default_rate_limit])
@@ -69,8 +77,6 @@ def create_app(settings: Optional[Settings] = None) -> FastAPI:
         structlog.contextvars.clear_contextvars()
         structlog.contextvars.bind_contextvars(request_id=request_id)
 
-        # Bind the request ID to structlog's contextvars so every log line within
-        # this request automatically includes it without explicit passing.
         t0 = time.perf_counter()
         response = await call_next(request)
         duration_ms = round((time.perf_counter() - t0) * 1000)
@@ -87,5 +93,6 @@ def create_app(settings: Optional[Settings] = None) -> FastAPI:
 
     app.include_router(health_router)
     app.include_router(chat_router, prefix="/api/v1")
+    app.include_router(conversations_router, prefix="/api/v1")
 
     return app

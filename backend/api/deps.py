@@ -3,6 +3,7 @@ from fastapi import Depends, HTTPException, Request, Security, status
 from fastapi.security import APIKeyHeader
 
 from backend.services.chat import ChatService
+from backend.services.conversation import ConversationService
 from backend.telemetry.metrics import AUTH_FAILURE_TOTAL
 
 log = structlog.get_logger(__name__)
@@ -12,6 +13,10 @@ _api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 
 def get_chat_service(request: Request) -> ChatService:
     return request.app.state.chat_service
+
+
+def get_conversation_service(request: Request) -> ConversationService:
+    return request.app.state.conversation_service
 
 
 def require_api_key(

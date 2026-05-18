@@ -64,11 +64,13 @@ export function useChatModel({ characters }: Props) {
         model: DEFAULT_MODEL,
         bot_name: activeCharacter?.bot_name,
         system_prompt: activeCharacter?.systemPrompt ?? null,
+        conversation_id: store.backendAvailable ? convId : undefined,
+        character_id: store.backendAvailable ? activeCharacter?.id : undefined,
         signal: controller.signal,
       },
     )
       .then((data) => {
-        store.resolveLastMessage(convId, data.content);
+        store.resolveLastMessage(convId, data.content, data.usage);
       })
       .catch((err: Error) => {
         if (err.name === "AbortError") return;

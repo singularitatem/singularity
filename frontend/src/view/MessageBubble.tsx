@@ -71,6 +71,12 @@ export function MessageBubble({ character, isSpeaking, message, streaming, onSpe
             </div>
           )}
         </div>
+        {!isUser && !isStreamingAssistant && message.usage && (
+          <div className={styles.tokenCount}>
+            {message.usage.prompt_tokens.toLocaleString()} prompt · {message.usage.completion_tokens.toLocaleString()} completion
+            {message.usage.estimated && <span className={styles.tokenEstimated}> · estimated</span>}
+          </div>
+        )}
       </div>
     </div>
   );
