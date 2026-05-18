@@ -14,6 +14,33 @@ const CHARACTER_VOICES: Record<string, VoiceProfile> = {
   luna:     { namePattern: "ava|samantha|zoe|victoria",    pitch: 1.4,  rate: 1.1  },
 };
 
+// ── Keyword config for voice inference ─────────────────────────────────────
+
+const GENDER_FEMALE = /\b(she|her|woman|female|lady|queen|princess|girl|witch|goddess|mrs|ms|sister|mother|aunt)\b/g;
+const GENDER_MALE   = /\b(he|him|man|male|lord|king|prince|boy|wizard|god|mr|sir|brother|father|uncle)\b/g;
+
+interface PitchRateRule { pattern: RegExp; pitchDelta?: number; rateDelta?: number; }
+interface AccentRule    { pattern: RegExp; namePattern: string; }
+
+const AGE_RULES: PitchRateRule[] = [
+  { pattern: /\b(ancient|elder|old|aged|wise|sage|veteran|grandfather|centuries|immortal)\b/, pitchDelta: -0.1,  rateDelta: -0.13 },
+  { pattern: /\b(young|child|kid|teen|student|junior|playful|cheerful)\b/,                   pitchDelta:  0.1,  rateDelta:  0.08 },
+];
+
+const ENERGY_RULES: PitchRateRule[] = [
+  { pattern: /\b(energetic|enthusiastic|excited|lively|vibrant|passionate|fierce|bold|intense)\b/, rateDelta:  0.13 },
+  { pattern: /\b(calm|slow|measured|thoughtful|deliberate|careful|peaceful|serene|gentle|soft)\b/, rateDelta: -0.12 },
+];
+
+// Each accent rule overrides the gender-derived namePattern.
+const ACCENT_RULES: AccentRule[] = [
+  { pattern: /\b(british|england|london|uk|cockney|oxford)\b/,    namePattern: "daniel|british"   },
+  { pattern: /\b(irish|ireland|dublin)\b/,                        namePattern: "moira|irish"      },
+  { pattern: /\b(australian|australia|sydney|melbourne)\b/,       namePattern: "karen|australian" },
+  { pattern: /\b(scottish|scotland|edinburgh)\b/,                 namePattern: "fiona|scottish"   },
+  { pattern: /\b(french|france|paris)\b/,                         namePattern: "thomas|french"    },
+];
+
 // Infer a voice profile for custom characters from their description + system prompt.
 function inferVoiceProfile(character: Character): VoiceProfile {
   const text = [character.name, character.description, character.systemPrompt ?? ""]
@@ -24,9 +51,9 @@ function inferVoiceProfile(character: Character): VoiceProfile {
   let rate = 0.95;
   let namePattern: string | undefined;
 
-  // ── Gender ──
-  const femaleScore = (text.match(/\b(she|her|woman|female|lady|queen|princess|girl|witch|goddess|mrs|ms|sister|mother|aunt)\b/g) ?? []).length;
-  const maleScore   = (text.match(/\b(he|him|man|male|lord|king|prince|boy|wizard|god|mr|sir|brother|father|uncle)\b/g) ?? []).length;
+  // Gender: compare keyword counts to set a base pitch and voice family.
+  const femaleScore = (text.match(GENDER_FEMALE) ?? []).length;
+  const maleScore   = (text.match(GENDER_MALE)   ?? []).length;
   if (femaleScore > maleScore) {
     pitch += 0.18;
     namePattern = "samantha|karen|victoria|moira|zoe|fiona|female";
@@ -35,46 +62,25 @@ function inferVoiceProfile(character: Character): VoiceProfile {
     namePattern = "daniel|alex|fred|thomas|male";
   }
 
-  // ── Age ──
-  if (/\b(ancient|elder|old|aged|wise|sage|veteran|grandfather|centuries|immortal)\b/.test(text)) {
-    pitch -= 0.1;
-    rate  -= 0.13;
-  }
-  if (/\b(young|child|kid|teen|student|junior|playful|cheerful)\b/.test(text)) {
-    pitch += 0.1;
-    rate  += 0.08;
+  for (const { pattern, pitchDelta = 0, rateDelta = 0 } of AGE_RULES) {
+    if (pattern.test(text)) { pitch += pitchDelta; rate += rateDelta; }
   }
 
-  // ── Energy ──
-  if (/\b(energetic|enthusiastic|excited|lively|vibrant|passionate|fierce|bold|intense)\b/.test(text)) {
-    rate += 0.13;
-  }
-  if (/\b(calm|slow|measured|thoughtful|deliberate|careful|peaceful|serene|gentle|soft)\b/.test(text)) {
-    rate -= 0.12;
+  for (const { pattern, rateDelta = 0 } of ENERGY_RULES) {
+    if (pattern.test(text)) { rate += rateDelta; }
   }
 
-  // ── Accent / region (overrides gender voice preference) ──
-  if (/\b(british|england|london|uk|cockney|oxford)\b/.test(text)) {
-    namePattern = "daniel|british";
-  } else if (/\b(irish|ireland|dublin)\b/.test(text)) {
-    namePattern = "moira|irish";
-  } else if (/\b(australian|australia|sydney|melbourne)\b/.test(text)) {
-    namePattern = "karen|australian";
-  } else if (/\b(scottish|scotland|edinburgh)\b/.test(text)) {
-    namePattern = "fiona|scottish";
-  } else if (/\b(french|france|paris)\b/.test(text)) {
-    namePattern = "thomas|french";
+  // Accent overrides the gender-derived namePattern.
+  for (const { pattern, namePattern: np } of ACCENT_RULES) {
+    if (pattern.test(text)) { namePattern = np; break; }
   }
 
-  // ── Tone ──
+  // Tone overrides everything: set absolute values rather than deltas.
   if (/\b(robot|ai|android|synthetic|machine|digital)\b/.test(text)) {
-    pitch = 0.85;
-    rate  = 1.05;
-    namePattern = "fred|zarvox";
+    pitch = 0.85; rate = 1.05; namePattern = "fred|zarvox";
   }
   if (/\b(villain|dark|sinister|menacing|evil|shadow)\b/.test(text)) {
-    pitch -= 0.15;
-    rate  -= 0.08;
+    pitch -= 0.15; rate -= 0.08;
   }
 
   return {

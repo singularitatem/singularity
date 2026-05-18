@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Character } from "../types";
 import styles from "./CharacterModal.module.css";
 
@@ -29,10 +29,14 @@ export function CharacterModal({
     return () => window.removeEventListener("keydown", handler);
   }, [onClose]);
 
-  const filtered = characters.filter((c) => {
+  const filtered = useMemo(() => {
     const q = query.toLowerCase();
-    return !q || c.name.toLowerCase().includes(q) || c.description.toLowerCase().includes(q);
-  });
+    return !q
+      ? characters
+      : characters.filter(
+          (c) => c.name.toLowerCase().includes(q) || c.description.toLowerCase().includes(q),
+        );
+  }, [characters, query]);
 
   const handleCardClick = (c: Character) => {
     onSelect(c.id);

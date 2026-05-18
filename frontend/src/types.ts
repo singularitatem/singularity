@@ -25,6 +25,14 @@ export interface Character {
   voiceProfile?: VoiceProfile;
 }
 
+/**
+ * Three-state type controlling the character detail modal:
+ *   undefined  → modal closed
+ *   null       → open in create mode
+ *   Character  → open in edit mode for the given character
+ */
+export type CharacterEditTarget = Character | null | undefined;
+
 export interface Conversation {
   id: string;
   title: string;

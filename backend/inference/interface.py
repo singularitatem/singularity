@@ -16,8 +16,6 @@ class ChatRequest:
     bot_name: Optional[str] = None
     user_name: Optional[str] = None
     system_prompt: Optional[str] = None
-    temperature: Optional[float] = None
-    max_tokens: Optional[int] = None
 
 
 class InferenceBackend(ABC):

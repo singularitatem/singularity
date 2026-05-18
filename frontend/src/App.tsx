@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useCharacterStore } from "./model/useCharacterStore";
 import { useChatModel } from "./model/useChatModel";
 import { useSpeech } from "./model/useSpeech";
-import type { Character } from "./types";
+import type { CharacterEditTarget } from "./types";
 import { CharacterDetailModal } from "./view/CharacterDetailModal";
 import { CharacterModal } from "./view/CharacterModal";
 import { ChatWindow } from "./view/ChatWindow";
@@ -13,8 +13,7 @@ import styles from "./App.module.css";
 export default function App() {
   const { characters, addCharacter, updateCharacter, deleteCharacter } = useCharacterStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [detailCharacter, setDetailCharacter] = useState<Character | null | undefined>(undefined);
-  // undefined = closed, null = create mode, Character = edit mode
+  const [detailCharacter, setDetailCharacter] = useState<CharacterEditTarget>(undefined);
 
   const {
     activeCharacter,

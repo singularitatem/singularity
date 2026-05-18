@@ -54,12 +54,6 @@ export function useConversationStore(): ConversationStore {
     window.localStorage.setItem(RECENT_KEY, JSON.stringify(recentCharacterIds));
   }, [recentCharacterIds]);
 
-  useEffect(() => {
-    if (!conversations.some((c) => c.id === activeConversationId)) {
-      setActiveConversationId(conversations[0]?.id);
-    }
-  }, [activeConversationId, conversations]);
-
   const activeConversation =
     conversations.find((c) => c.id === activeConversationId) ?? conversations[0];
 
@@ -127,7 +121,7 @@ export function useConversationStore(): ConversationStore {
     activeCharacterId,
     recentCharacterIds,
     conversations,
-    activeConversationId,
+    activeConversationId: activeConversation?.id ?? activeConversationId,
     activeConversation,
     selectCharacter,
     createNewConversation,
