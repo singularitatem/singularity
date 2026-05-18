@@ -26,6 +26,8 @@ class ChatResult:
 
 
 class ChatService:
+    """Thin application layer wrapping an InferenceBackend with token counting."""
+
     def __init__(self, backend: InferenceBackend, settings: Settings) -> None:
         self._backend = backend
         self._default_model = settings.default_model
@@ -35,6 +37,7 @@ class ChatService:
 
     async def chat(self, request: ChatRequest) -> ChatResult:
         if not request.model:
+            # replace() returns a new instance rather than mutating the caller's object.
             request = replace(request, model=self._default_model)
 
         prompt_tokens = sum(_count_tokens(m.content) for m in request.messages)

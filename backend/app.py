@@ -23,10 +23,17 @@ log = structlog.get_logger(__name__)
 
 
 def create_app(settings: Optional[Settings] = None) -> FastAPI:
+    """Create and configure the FastAPI application.
+
+    Accepts an optional Settings override so tests can inject custom config
+    without touching environment variables or .env files.
+    """
     if settings is None:
         settings = Settings()
 
     configure_logging(settings.env)
+    # Push the rate limit string into the chat router module so the @limiter.limit
+    # decorator reads it lazily (at request time) rather than at import time.
     _chat_route._CHAT_RATE_LIMIT = settings.chat_rate_limit
 
     @asynccontextmanager
@@ -62,6 +69,8 @@ def create_app(settings: Optional[Settings] = None) -> FastAPI:
         structlog.contextvars.clear_contextvars()
         structlog.contextvars.bind_contextvars(request_id=request_id)
 
+        # Bind the request ID to structlog's contextvars so every log line within
+        # this request automatically includes it without explicit passing.
         t0 = time.perf_counter()
         response = await call_next(request)
         duration_ms = round((time.perf_counter() - t0) * 1000)

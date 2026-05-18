@@ -23,6 +23,9 @@ def _voice_prompt(name: str, description: Optional[str], system_prompt: Optional
 
 
 def _parse_voice(text: str) -> VoiceProfile:
+    """Parse a free-text self-description from the LLM into a VoiceProfile.
+    Uses keyword counting and regex — intentionally approximate.
+    """
     t = text.lower()
 
     female = len(re.findall(r"\b(female|woman|feminine|lady|girl|she|her)\b", t))
@@ -69,6 +72,12 @@ async def infer_voice_profile(
     system_prompt: Optional[str],
     service: ChatService,
 ) -> VoiceProfile:
+    """Ask the character to describe its own voice, then parse the free-text answer.
+
+    Setting bot_name causes the LLM to adopt the character's persona, so the
+    self-description reflects personality traits rather than a generic response.
+    The raw string is then passed to _parse_voice for heuristic extraction.
+    """
     request = ChatRequest(
         messages=[
             ChatMessage(
@@ -85,4 +94,4 @@ async def infer_voice_profile(
         system_prompt=system_prompt,
     )
     raw = await service.chat(request)
-    return _parse_voice(raw)
+    return _parse_voice(raw.content)

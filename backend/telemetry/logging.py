@@ -5,6 +5,12 @@ import structlog
 
 
 def configure_logging(env: str = "development") -> None:
+    """Configure structlog for the given environment.
+
+    Development: human-friendly ConsoleRenderer output.
+    Production: structured JSON for log aggregators.
+    Both modes inject a request_id via structlog contextvars (set per-request in middleware).
+    """
     shared_processors = [
         structlog.contextvars.merge_contextvars,
         structlog.stdlib.add_logger_name,
@@ -43,5 +49,6 @@ def configure_logging(env: str = "development") -> None:
     root.handlers = [handler]
     root.setLevel(logging.INFO)
 
+    # httpx and httpcore are very chatty at INFO; suppress to WARNING to avoid log noise.
     for name in ("httpx", "httpcore"):
         logging.getLogger(name).setLevel(logging.WARNING)

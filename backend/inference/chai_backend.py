@@ -73,6 +73,7 @@ class ChaiBackend(InferenceBackend):
 
         response.raise_for_status()
         data = response.json()
+        # "model_output" is the current Chai field; "response" is the legacy fallback.
         content = data.get("model_output") or data.get("response")
         if not content:
             raise ValueError(f"Unexpected Chai API response shape: {list(data.keys())}")
